@@ -142,8 +142,9 @@ export async function syncDb() {
         const blockchainHeight = await getBlockchainHeight();
         while (blockchainHeight - databaseHeight > 100) {
             const blockPromises = Array.from({ length: 10 }, () => {
+                if (blockchainHeight - databaseHeight <= 100) return;
                 return getBlocksDetails((databaseHeight += 100), 100);
-            });
+            }).filter(Boolean);
 
             const blocksPack = await Promise.all(blockPromises);
             const blocks = blocksPack.flat(Infinity);
@@ -154,14 +155,13 @@ export async function syncDb() {
             const transformedToDbTxs = txs.map(transformTxDataForDb);
             logger.info(`zano burned: ${totalBurned}`);
 
-            await Promise.all([
-                Block.bulkCreate(transformedToDbBlocks, {
-                    ignoreDuplicates: true,
-                }),
-                Transaction.bulkCreate(transformedToDbTxs, {
-                    ignoreDuplicates: true,
-                }),
-            ]);
+            await Block.bulkCreate(transformedToDbBlocks, {
+                ignoreDuplicates: true,
+            });
+            await Transaction.bulkCreate(transformedToDbTxs, {
+                ignoreDuplicates: true,
+            });
+
             await updateDbHeight(databaseHeight);
             logger.info(`DB height ${databaseHeight}/${blockchainHeight}`);
         }
