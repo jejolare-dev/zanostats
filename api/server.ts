@@ -20,6 +20,8 @@ const dev = process.env.NODE_ENV !== "production";
 const nextApp = next({ dev, turbopack: true });
 const handle = nextApp.getRequestHandler();
 
+let syncLaunced = false;
+
 // Log uncaught exceptions and unhandled promise rejections
 process.on("uncaughtException", (err) => {
     logger.error("Uncaught Exception: ");
@@ -44,7 +46,6 @@ process.on("unhandledRejection", (reason, promise) => {
     app.use(express.urlencoded({ extended: true }));
 
     await init();
-    syncDb();
 
     app.use("/api", [statsRoute]);
 
@@ -53,4 +54,20 @@ process.on("unhandledRejection", (reason, promise) => {
     app.listen(PORT, () => {
         logger.info(`Server is running on http://localhost:${PORT}`);
     });
+
+    // check every 5 sec that db height === blockchain height;
+    setInterval(async () => {
+        if (syncLaunced) {
+            return; 
+        }
+    
+        syncLaunced = true;
+        try {
+            await syncDb();
+        } catch (error) {
+            console.error("Ошибка при синхронизации:", error);
+        } finally {
+            syncLaunced = false; 
+        }
+    }, 5000);
 })();
