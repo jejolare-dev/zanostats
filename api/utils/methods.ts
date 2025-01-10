@@ -10,8 +10,8 @@ import {
     transformTxDataForDb,
 } from "./utils";
 
-const publicNode =
-    process.env.PUBLIC_NODE || "http://37.27.100.59:10500/json_rpc";
+const zanoURL =
+    process.env.ZANOD_URL || "http://37.27.100.59:10500/json_rpc";
 
 export async function init() {
     const stats = await Stats.findOne({
@@ -26,7 +26,7 @@ export async function init() {
 
 export async function getInfo() {
     try {
-        const info = await axios.post(publicNode, {
+        const info = await axios.post(zanoURL, {
             id: 0,
             jsonrpc: "2.0",
             method: "getinfo",
@@ -43,7 +43,7 @@ export async function getInfo() {
 
 export async function getAssetsCount() {
     try {
-        const result: any = await axios.post(publicNode, {
+        const result: any = await axios.post(zanoURL, {
             id: 0,
             jsonrpc: "2.0",
             method: "get_assets_list",
@@ -120,7 +120,7 @@ async function updateBurnedZano(newBurnedZano: number) {
 
 async function getBlocksDetails(fromHeight: number, count: number) {
     try {
-        const result: any = await axios.post(publicNode, {
+        const result: any = await axios.post(zanoURL, {
             id: 0,
             jsonrpc: "2.0",
             method: "get_blocks_details",
