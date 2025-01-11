@@ -4,14 +4,14 @@ import Block from "../models/block.model";
 import Transaction from "../models/transaction.model";
 import logger from "../logger";
 import {
-    countBurnedZano,
     getTxsFromBlocks,
     transformBlockDataForDb,
     transformTxDataForDb,
 } from "./utils";
+import { Op } from "sequelize";
+import Decimal from "decimal.js";
 
-const zanoURL =
-    process.env.ZANOD_URL || "http://37.27.100.59:10500/json_rpc";
+const zanoURL = process.env.ZANOD_URL || "http://37.27.100.59:10500/json_rpc";
 
 export async function init() {
     const stats = await Stats.findOne({
@@ -21,6 +21,17 @@ export async function init() {
     });
     if (!stats) {
         await Stats.create();
+
+        const firstBlocks = await getBlocksDetails(0, 100);
+        const firstTxs = getTxsFromBlocks(firstBlocks);
+        const transformedToDbBlocks = firstBlocks.map(transformBlockDataForDb);
+        const transformedToDbTxs = firstTxs.map(transformTxDataForDb);
+        await Block.bulkCreate(transformedToDbBlocks, {
+            ignoreDuplicates: true,
+        });
+        await Transaction.bulkCreate(transformedToDbTxs, {
+            ignoreDuplicates: true,
+        });
     }
 }
 
@@ -102,22 +113,6 @@ async function updateDbHeight(newHeight: number) {
     }
 }
 
-async function updateBurnedZano(newBurnedZano: number) {
-    try {
-        const stats = await Stats.findOne({
-            where: {
-                id: 1,
-            },
-        });
-        const prevBurned = stats?.burned_zano;
-        const totalBurned = newBurnedZano + prevBurned!;
-        await stats?.update({ burned_zano: totalBurned });
-        return totalBurned;
-    } catch (e) {
-        console.error(e);
-    }
-}
-
 async function getBlocksDetails(fromHeight: number, count: number) {
     try {
         const result: any = await axios.post(zanoURL, {
@@ -136,24 +131,24 @@ async function getBlocksDetails(fromHeight: number, count: number) {
     }
 }
 
-export async function syncDb() {
+export async function syncBlocks() {
     try {
         let databaseHeight = await getDbHeight();
         const blockchainHeight = await getBlockchainHeight();
+
         while (blockchainHeight - databaseHeight > 100) {
             const blockPromises = Array.from({ length: 10 }, () => {
                 if (blockchainHeight - databaseHeight <= 100) return;
+                if (databaseHeight + 100 > blockchainHeight) return;
                 return getBlocksDetails((databaseHeight += 100), 100);
             }).filter(Boolean);
 
             const blocksPack = await Promise.all(blockPromises);
             const blocks = blocksPack.flat(Infinity);
+
             const txs = getTxsFromBlocks(blocks);
-            const burnedZano = countBurnedZano(txs);
-            const totalBurned = await updateBurnedZano(burnedZano);
             const transformedToDbBlocks = blocks.map(transformBlockDataForDb);
             const transformedToDbTxs = txs.map(transformTxDataForDb);
-            logger.info(`zano burned: ${totalBurned}`);
 
             await Block.bulkCreate(transformedToDbBlocks, {
                 ignoreDuplicates: true,
@@ -166,29 +161,72 @@ export async function syncDb() {
             logger.info(`DB height ${databaseHeight}/${blockchainHeight}`);
         }
 
-        const restHeight = databaseHeight - blockchainHeight;
-        const restBlocks = await getBlocksDetails(
-            (databaseHeight += restHeight),
-            restHeight
-        );
-        const restTxs = getTxsFromBlocks(restBlocks);
-        const burnedZano = countBurnedZano(restTxs);
-        const totalBurned = await updateBurnedZano(burnedZano);
-        const transformedToDbBlocks = restBlocks.map(transformBlockDataForDb);
-        const transformedToDbTxs = restTxs.map(transformTxDataForDb);
-        logger.info(`zano burned: ${totalBurned}`);
+        const restHeight = blockchainHeight - databaseHeight;
 
-        await Block.bulkCreate(transformedToDbBlocks, {
-            ignoreDuplicates: true,
-        });
-        await Transaction.bulkCreate(transformedToDbTxs, {
-            ignoreDuplicates: true,
-        });
+        if (restHeight > 0) {
+            const restBlocks = await getBlocksDetails(
+                databaseHeight,
+                restHeight
+            );
+            databaseHeight += restHeight;
+            const restTxs = getTxsFromBlocks(restBlocks);
+            const transformedToDbBlocks = restBlocks.map(
+                transformBlockDataForDb
+            );
+            const transformedToDbTxs = restTxs.map(transformTxDataForDb);
 
-        await updateDbHeight(databaseHeight);
+            await Block.bulkCreate(transformedToDbBlocks, {
+                ignoreDuplicates: true,
+            });
+            await Transaction.bulkCreate(transformedToDbTxs, {
+                ignoreDuplicates: true,
+            });
+            await updateDbHeight(databaseHeight);
+        }
+
         logger.info(`DB height ${databaseHeight}/${blockchainHeight}`);
         logger.info(`Sync complete`);
     } catch (e) {
+        console.error(e);
+    }
+}
+
+export async function syncStats() {
+    try {
+        const info = await getInfo();
+        const stats = await Stats.findOne({
+            where: {
+                id: 1,
+            },
+        });
+        const { alias_count } = info?.result?.alias_count;
+        const assets_count = await getAssetsCount();
+        const dbHeight = stats?.db_height;
+        let burned_zano = 0;
+        if (dbHeight && dbHeight >= 2555000) {
+            const blocks = await Block.findAll({
+                where: {
+                    height: {
+                        [Op.gte]: 2555000,
+                    },
+                    total_fee: {
+                        [Op.ne]: 0,
+                    },
+                },
+            });
+            const burnedZanoBig = blocks.reduce(
+                (totalFee, block) =>
+                    totalFee.plus(new Decimal(Number(block.total_fee))),
+                new Decimal(0)
+            );
+            burned_zano = burnedZanoBig
+                .dividedBy(new Decimal(10).pow(12))
+                .toNumber();
+        }
+        logger.info(`burned zano: ${burned_zano}`);
+
+        await stats!.update({ alias_count, assets_count, burned_zano });
+    } catch (e: any) {
         console.error(e);
     }
 }

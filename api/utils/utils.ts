@@ -18,12 +18,6 @@ export default function handlerTryCatch(
     };
 }
 
-export function countBurnedZano(txs: any[]) {
-    const burnedZanoBig = txs.reduce((totalFee, tx) => (totalFee += tx.fee), 0);
-    const burnedZano = burnedZanoBig / 10 ** 12;
-    return burnedZano;
-}
-
 export function getTxsFromBlocks(blocks: any[]) {
     return blocks
         .map((block: any) => block.transactions_details)
@@ -35,7 +29,7 @@ export function transformTxDataForDb(tx: any) {
     return {
         tx_id: id,
         keeper_block,
-        timestamp,
+        timestamp: timestamp,
     };
 }
 
@@ -53,7 +47,11 @@ export function transformBlockDataForDb(block: any) {
         height,
         block_size: block_cumulative_size,
         total_fee,
-        timestamp,
+        timestamp: timestamp,
         txs_count: transactions_details.length,
     };
+}
+
+export function formatUnixMsTimestampToSec(value: number) {
+    return value > 0 ? value / 1000 : 0;
 }

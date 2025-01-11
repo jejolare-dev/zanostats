@@ -8,7 +8,7 @@ class Block extends Model {
     declare block_size: number;
     declare txs_count: number;
     declare total_fee: number;
-    declare timestamp: Date;
+    declare timestamp: number;
 }
 
 Block.init(
@@ -18,8 +18,17 @@ Block.init(
         height: { type: DataTypes.INTEGER, unique: true, allowNull: false },
         block_size: { type: DataTypes.INTEGER, allowNull: false },
         txs_count: { type: DataTypes.INTEGER, allowNull: false },
-        total_fee: { type: DataTypes.BIGINT, allowNull: false },
-        timestamp: { type: DataTypes.DATE, allowNull: false },
+        total_fee: {
+            type: DataTypes.BIGINT,
+            allowNull: false,
+            get() {
+                return Number(this.getDataValue("total_fee"));
+            },
+        },
+        timestamp: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
     },
     {
         sequelize,
