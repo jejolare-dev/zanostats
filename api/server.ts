@@ -5,7 +5,7 @@ import logger from "@/api/logger";
 import sequelize from "@/api/sequelize";
 import initdb from "@/api/database";
 import { statsRoute } from "./routes/stats.route";
-import { init, syncBlocks, syncStats } from "./utils/methods";
+import { init, syncBlocks, syncStats, syncTxs } from "./utils/sync";
 
 if (!process.env.JWT_SECRET) {
     throw new Error("JWT_SECRET is not provided at .env file");
@@ -55,19 +55,20 @@ process.on("unhandledRejection", (reason, promise) => {
         logger.info(`Server is running on http://localhost:${PORT}`);
     });
 
-    // check every 5 sec that db height === blockchain height;
+    // update data every 5 sec
     setInterval(async () => {
         if (syncLaunced) {
-            return; 
+            return;
         }
         syncLaunced = true;
         try {
+            syncTxs();
             await syncBlocks();
-            await syncStats()
+            await syncStats();
         } catch (error) {
-            console.error("sync error:", error);
+            logger.error("Sync error: ", error);
         } finally {
-            syncLaunced = false; 
+            syncLaunced = false;
         }
     }, 5000);
 })();

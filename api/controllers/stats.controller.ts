@@ -3,7 +3,7 @@ import Block from "../models/block.model";
 import Transaction from "../models/transaction.model";
 import { Op } from "sequelize";
 import Stats from "../models/stats.model";
-import { formatUnixMsTimestampToSec } from "../utils/utils";
+import Decimal from "decimal.js";
 
 class StatsController {
     async getRegisteredAliasesCount(req: Request, res: Response) {
@@ -34,16 +34,16 @@ class StatsController {
 
     async getAvgNumberOfTxsPerBlock(req: Request, res: Response) {
         const { data } = req?.body;
-        const startPeriod = data.startPeriod || 0;
-        const endPeriod = data.endPeriod || Date.now();
+        const startPeriod = data?.startPeriod || 0;
+        const endPeriod = data?.endPeriod || Date.now();
         const stats = await Stats.findOne({
             where: {
                 id: 1,
             },
         });
         const blocksCount = stats?.db_height;
-        const start = formatUnixMsTimestampToSec(startPeriod);
-        const end = formatUnixMsTimestampToSec(endPeriod);
+        const start = startPeriod;
+        const end = endPeriod
 
         if (!blocksCount) return res.status(500);
 
@@ -67,21 +67,41 @@ class StatsController {
     }
 
     async getZanoBurned(req: Request, res: Response) {
-        const stats = await Stats.findOne({
+        const { data } = req?.body;
+        const startPeriod = data?.startPeriod || 0;
+        const endPeriod = data?.endPeriod || Date.now();
+        const start = startPeriod;
+        const end = endPeriod;
+
+        const blocks = await Block.findAll({
             where: {
-                id: 1,
+                height: {
+                    [Op.gte]: 2555000,
+                },
+                timestamp: {
+                    [Op.gte]: start,
+                    [Op.lte]: end,
+                },
             },
         });
-        const burnedZano = stats?.burned_zano;
+        const burnedZanoBig = blocks.reduce(
+            (totalFee, block) =>
+                totalFee.plus(new Decimal(Number(block.total_fee))),
+            new Decimal(0)
+        );
+        const burnedZano = burnedZanoBig
+            .dividedBy(new Decimal(10).pow(12))
+            .toNumber();
+
         return res.status(200).send({ success: true, data: burnedZano });
     }
 
     async getAvgBlockSize(req: Request, res: Response) {
         const { data } = req?.body;
-        const startPeriod = data.startPeriod || 0;
-        const endPeriod = data.endPeriod || Date.now();
-        const start = formatUnixMsTimestampToSec(startPeriod);
-        const end = formatUnixMsTimestampToSec(endPeriod);
+        const startPeriod = data?.startPeriod || 0;
+        const endPeriod = data?.endPeriod || Date.now();
+        const start = startPeriod;
+        const end = endPeriod;
         const stats = await Stats.findOne({
             where: {
                 id: 1,
@@ -99,11 +119,14 @@ class StatsController {
         });
 
         const allBlocksSize = blocks.reduce(
-            (blocksSize, block) => blocksSize + block.block_size,
-            0
+            (blocksSize, block) =>
+                blocksSize.plus(new Decimal(block.block_cumulative_size)),
+            new Decimal(0)
         );
-        const avgBlockSize = allBlocksSize / blocksCount;
-        return res.status(200).send({ success: true, data: avgBlockSize });
+        const avgBlockSize = allBlocksSize.dividedBy(blocksCount);
+        return res
+            .status(200)
+            .send({ success: true, data: avgBlockSize.toNumber() });
     }
 
     async getConfirmedTxsPerDay(req: Request, res: Response) {
@@ -111,8 +134,8 @@ class StatsController {
         startOfDay.setHours(0, 0, 0, 0);
         const endOfDay = new Date();
         endOfDay.setHours(23, 59, 59, 999);
-        const start = formatUnixMsTimestampToSec(startOfDay.getTime());
-        const end = formatUnixMsTimestampToSec(endOfDay.getTime());
+        const start = startOfDay.getTime();
+        const end = endOfDay.getTime();
 
         const dailyTxs = await Transaction.findAll({
             where: {

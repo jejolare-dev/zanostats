@@ -25,33 +25,47 @@ export function getTxsFromBlocks(blocks: any[]) {
 }
 
 export function transformTxDataForDb(tx: any) {
-    const { id, keeper_block, timestamp } = tx;
+    const { id, timestamp, extra, ins, outs, attachments, ...rest } = tx;
     return {
         tx_id: id,
-        keeper_block,
-        timestamp: timestamp,
+        extra: decodeString(JSON.stringify(extra)),
+        ins: decodeString(JSON.stringify(ins)),
+        outs: decodeString(JSON.stringify(outs)),
+        attachments: decodeString(
+            JSON.stringify(Boolean(attachments) ? attachments : {})
+        ),
+        timestamp: timestamp * 1000,
+        ...rest,
     };
 }
 
 export function transformBlockDataForDb(block: any) {
     const {
         id,
-        height,
-        block_cumulative_size,
-        total_fee,
-        timestamp,
         transactions_details,
+        timestamp,
+        miner_text_info,
+        object_in_json,
+        ...rest
     } = block;
     return {
         block_id: id,
-        height,
-        block_size: block_cumulative_size,
-        total_fee,
-        timestamp: timestamp,
+        timestamp: timestamp * 1000,
+        miner_text_info: decodeString(miner_text_info),
+        object_in_json: decodeString(object_in_json),
         txs_count: transactions_details.length,
+        ...rest,
     };
 }
 
-export function formatUnixMsTimestampToSec(value: number) {
-    return value > 0 ? value / 1000 : 0;
-}
+export const decodeString = (str) => {
+    if (!!str) {
+        str = str.replace(/'/g, "''");
+        return str.replace(/\u0000/g, "", (unicode) => {
+            return String.fromCharCode(
+                parseInt(unicode.replace(/\\u/g, ""), 16)
+            );
+        });
+    }
+    return str;
+};

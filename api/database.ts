@@ -10,12 +10,12 @@ async function initdb() {
         port: parseInt(process.env.PGPORT || "5432", 10),
         keepAlive: true,
         idleTimeoutMillis: 0,
-        max: 100
+        max: 100,
     });
 
     try {
         await pool.query(`CREATE DATABASE "${process.env.PGDATABASE}" `);
-    } catch (error : any) {
+    } catch (error: any) {
         if (error?.code === "42P04") {
             console.log("Database already exists, skipping creation");
         } else {
