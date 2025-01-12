@@ -17,8 +17,6 @@ import {
     updateDbHeight,
 } from "./methods";
 
-const txsQueue: any[] = [];
-
 export async function init() {
     const stats = await Stats.findOne({
         where: {
@@ -27,19 +25,19 @@ export async function init() {
     });
     if (!stats) {
         await Stats.create();
-        await updateDbHeight(2980100);
 
         const firstBlocks = await getBlocksDetails(0, 100);
         const firstTxs = getTxsFromBlocks(firstBlocks);
-        txsQueue.push(...firstTxs.map((tx) => tx.id));
         const transformedToDbBlocks = firstBlocks.map(transformBlockDataForDb);
         const transformedToDbTxs = firstTxs.map(transformTxDataForDb);
         await Block.bulkCreate(transformedToDbBlocks, {
             ignoreDuplicates: true,
         });
-        await Transaction.bulkCreate(transformedToDbTxs, {
+        const txsRow = await Transaction.bulkCreate(transformedToDbTxs, {
             ignoreDuplicates: true,
         });
+
+        await syncTxs(txsRow.map((tx) => tx.id));
     }
 }
 
@@ -59,16 +57,17 @@ export async function syncBlocks() {
             const blocks = blocksPack.flat(Infinity);
 
             const txs = getTxsFromBlocks(blocks);
-            txsQueue.push(...txs.map((tx) => tx.id));
             const transformedToDbBlocks = blocks.map(transformBlockDataForDb);
             const transformedToDbTxs = txs.map(transformTxDataForDb);
 
             await Block.bulkCreate(transformedToDbBlocks, {
                 ignoreDuplicates: true,
             });
-            await Transaction.bulkCreate(transformedToDbTxs, {
+            const txsRow = await Transaction.bulkCreate(transformedToDbTxs, {
                 ignoreDuplicates: true,
             });
+
+            await syncTxs(txsRow.map((tx) => tx.id));
 
             await updateDbHeight(databaseHeight);
             logger.info(`DB height ${databaseHeight}/${blockchainHeight}`);
@@ -87,14 +86,16 @@ export async function syncBlocks() {
                 transformBlockDataForDb
             );
             const transformedToDbTxs = restTxs.map(transformTxDataForDb);
-            txsQueue.push(...restTxs.map((tx) => tx.id));
 
             await Block.bulkCreate(transformedToDbBlocks, {
                 ignoreDuplicates: true,
             });
-            await Transaction.bulkCreate(transformedToDbTxs, {
+            const txsRow = await Transaction.bulkCreate(transformedToDbTxs, {
                 ignoreDuplicates: true,
             });
+
+            await syncTxs(txsRow.map((tx) => tx.id));
+
             await updateDbHeight(databaseHeight);
         }
 
@@ -122,18 +123,20 @@ export async function syncStats() {
     }
 }
 
-export async function syncTxs() {
-    while (txsQueue.length) {
+export async function syncTxs(txs: number[]) {
+    while (txs.length) {
         try {
-            const txId = txsQueue.pop();
+            const txId = txs.pop();
             if (!txId) return;
-            const resTx = await getTxDetails(txId);
-            const tranformedTx = transformTxDataForDb(resTx);
             const txToUpdate = await Transaction.findOne({
                 where: {
-                    tx_id: txId,
+                    id: txId,
                 },
             });
+            if (!txToUpdate) return;
+            const resTx = await getTxDetails(txToUpdate?.tx_id);
+            if (!resTx) throw `Fetch error tx ${txToUpdate?.tx_id}`;
+            const tranformedTx = transformTxDataForDb(resTx);
             txToUpdate?.set("ins", tranformedTx.ins);
             txToUpdate?.set("outs", tranformedTx.outs);
             txToUpdate?.set("extra", tranformedTx.extra);

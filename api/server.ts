@@ -5,7 +5,7 @@ import logger from "@/api/logger";
 import sequelize from "@/api/sequelize";
 import initdb from "@/api/database";
 import { statsRoute } from "./routes/stats.route";
-import { init, syncBlocks, syncStats, syncTxs } from "./utils/sync";
+import { init, syncBlocks, syncStats } from "./utils/sync";
 
 if (!process.env.JWT_SECRET) {
     throw new Error("JWT_SECRET is not provided at .env file");
@@ -62,7 +62,6 @@ process.on("unhandledRejection", (reason, promise) => {
         }
         syncLaunced = true;
         try {
-            syncTxs();
             await syncBlocks();
             await syncStats();
         } catch (error) {
