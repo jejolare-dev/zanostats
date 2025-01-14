@@ -115,3 +115,16 @@ export async function getBlocksDetails(fromHeight: number, count: number) {
         console.error(e);
     }
 }
+
+export async function getStats() {
+    try {
+        const stats = await Stats.findOne({
+            where: {
+                id: 1,
+            },
+        });
+        return stats;
+    } catch (e) {
+        console.error(e);
+    }
+}

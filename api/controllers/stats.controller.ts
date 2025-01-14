@@ -2,17 +2,14 @@ import { Request, Response } from "express";
 import Block from "../models/block.model";
 import Transaction from "../models/transaction.model";
 import { Op } from "sequelize";
-import Stats from "../models/stats.model";
 import Decimal from "decimal.js";
+import { getStats } from "../utils/methods";
 
 class StatsController {
     async getRegisteredAliasesCount(req: Request, res: Response) {
-        const stats = await Stats.findOne({
-            where: {
-                id: 1,
-            },
-        });
-        const aliasesCount = stats?.alias_count;
+        const stats = await getStats();
+        if (!stats) return res.status(500);
+        const aliasesCount = stats.alias_count;
         return res.status(200).send({
             success: true,
             data: aliasesCount,
@@ -20,12 +17,9 @@ class StatsController {
     }
 
     async getRegisteredAssetsCount(req: Request, res: Response) {
-        const stats = await Stats.findOne({
-            where: {
-                id: 1,
-            },
-        });
-        const assetsCount = stats?.assets_count;
+        const stats = await getStats();
+        if (!stats) return res.status(500);
+        const assetsCount = stats.assets_count;
         return res.status(200).send({
             success: true,
             data: assetsCount,
@@ -36,14 +30,11 @@ class StatsController {
         const { data } = req?.body;
         const startPeriod = data?.startPeriod || 0;
         const endPeriod = data?.endPeriod || Date.now();
-        const stats = await Stats.findOne({
-            where: {
-                id: 1,
-            },
-        });
+        const stats = await getStats();
+        if (!stats) return res.status(500);
         const blocksCount = stats?.db_height;
         const start = startPeriod;
-        const end = endPeriod
+        const end = endPeriod;
 
         if (!blocksCount) return res.status(500);
 
@@ -53,6 +44,8 @@ class StatsController {
                     [Op.gte]: start,
                     [Op.lte]: end,
                 },
+                raw: true,
+                attributes: ["txs_count"],
             },
         });
         const allTxsCount = blocks.reduce(
@@ -82,6 +75,8 @@ class StatsController {
                     [Op.gte]: start,
                     [Op.lte]: end,
                 },
+                raw: true,
+                attributes: ["total_fee"],
             },
         });
         const burnedZanoBig = blocks.reduce(
@@ -102,11 +97,9 @@ class StatsController {
         const endPeriod = data?.endPeriod || Date.now();
         const start = startPeriod;
         const end = endPeriod;
-        const stats = await Stats.findOne({
-            where: {
-                id: 1,
-            },
-        });
+        const stats = await getStats();
+        if (!stats) return res.status(500);
+
         const blocksCount = stats?.db_height;
         if (!blocksCount) return res.status(500);
 
@@ -118,10 +111,8 @@ class StatsController {
                 },
             },
             raw: true,
-            attributes: [
-                "block_cumulative_size",
-            ]
-        });    
+            attributes: ["block_cumulative_size"],
+        });
 
         const allBlocksSize = blocks.reduce(
             (blocksSize, block) =>
@@ -150,13 +141,11 @@ class StatsController {
                     [Op.lte]: end,
                 },
             },
+            raw: true,
+            attributes: ["keeper_block"],
         });
 
-        const stats = await Stats.findOne({
-            where: {
-                id: 1,
-            },
-        });
+        const stats = await getStats();
 
         const currHeight = stats?.db_height;
 

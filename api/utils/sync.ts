@@ -13,31 +13,21 @@ import {
     getBlocksDetails,
     getDbHeight,
     getInfo,
+    getStats,
     getTxDetails,
     updateDbHeight,
 } from "./methods";
 
 export async function init() {
-    const stats = await Stats.findOne({
-        where: {
-            id: 1,
-        },
-    });
+    const stats = await getStats();
     if (!stats) {
-        await Stats.create();
-
-        const firstBlocks = await getBlocksDetails(0, 100);
-        const firstTxs = getTxsFromBlocks(firstBlocks);
-        const transformedToDbBlocks = firstBlocks.map(transformBlockDataForDb);
-        const transformedToDbTxs = firstTxs.map(transformTxDataForDb);
-        await Block.bulkCreate(transformedToDbBlocks, {
-            ignoreDuplicates: true,
-        });
-        const txsRow = await Transaction.bulkCreate(transformedToDbTxs, {
-            ignoreDuplicates: true,
-        });
-
-        await syncTxs(txsRow.map((tx) => tx.id));
+        try {
+            await Stats.create();
+            const firstBlocks = await getBlocksDetails(0, 100);
+            await saveBlocksAndTxs(firstBlocks);
+        } catch (e) {
+            logger.error(`error at init db : ${e}`);
+        }
     }
 }
 
@@ -46,33 +36,26 @@ export async function syncBlocks() {
         let databaseHeight = await getDbHeight();
         const blockchainHeight = await getBlockchainHeight();
 
-
         const BLOCKS_PER_REQUEST = 100;
 
         while (blockchainHeight - databaseHeight > BLOCKS_PER_REQUEST) {
             const blockPromises = Array.from({ length: 10 }, () => {
-                if (blockchainHeight - databaseHeight <= BLOCKS_PER_REQUEST) return;
-                if (databaseHeight + BLOCKS_PER_REQUEST > blockchainHeight) return;
-                return getBlocksDetails((databaseHeight += BLOCKS_PER_REQUEST), BLOCKS_PER_REQUEST);
+                if (blockchainHeight - databaseHeight <= BLOCKS_PER_REQUEST)
+                    return;
+                if (databaseHeight + BLOCKS_PER_REQUEST > blockchainHeight)
+                    return;
+                return getBlocksDetails(
+                    (databaseHeight += BLOCKS_PER_REQUEST),
+                    BLOCKS_PER_REQUEST
+                );
             }).filter(Boolean);
 
             const blocksPack = await Promise.all(blockPromises);
             const blocks = blocksPack.flat(Infinity);
 
-            const txs = getTxsFromBlocks(blocks);
-            const transformedToDbBlocks = blocks.map(transformBlockDataForDb);
-            const transformedToDbTxs = txs.map(transformTxDataForDb);
-
-            await Block.bulkCreate(transformedToDbBlocks, {
-                ignoreDuplicates: true,
-            });
-            const txsRow = await Transaction.bulkCreate(transformedToDbTxs, {
-                ignoreDuplicates: true,
-            });
-
-            await syncTxs(txsRow.map((tx) => tx.id));
-
+            await saveBlocksAndTxs(blocks);
             await updateDbHeight(databaseHeight);
+
             logger.info(`DB height ${databaseHeight}/${blockchainHeight}`);
         }
 
@@ -83,22 +66,10 @@ export async function syncBlocks() {
                 databaseHeight,
                 restHeight
             );
-            databaseHeight += restHeight;
             const restTxs = getTxsFromBlocks(restBlocks);
-            const transformedToDbBlocks = restBlocks.map(
-                transformBlockDataForDb
-            );
-            const transformedToDbTxs = restTxs.map(transformTxDataForDb);
+            await saveBlocksAndTxs(restTxs);
 
-            await Block.bulkCreate(transformedToDbBlocks, {
-                ignoreDuplicates: true,
-            });
-            const txsRow = await Transaction.bulkCreate(transformedToDbTxs, {
-                ignoreDuplicates: true,
-            });
-
-            await syncTxs(txsRow.map((tx) => tx.id));
-
+            databaseHeight += restHeight;
             await updateDbHeight(databaseHeight);
         }
 
@@ -112,14 +83,9 @@ export async function syncBlocks() {
 export async function syncStats() {
     try {
         const info = await getInfo();
-        const stats = await Stats.findOne({
-            where: {
-                id: 1,
-            },
-        });
+        const stats = await getStats();
         const { alias_count } = info?.result?.alias_count;
         const assets_count = await getAssetsCount();
-
         await stats!.update({ alias_count, assets_count });
     } catch (e: any) {
         logger.error(e);
@@ -149,4 +115,19 @@ export async function syncTxs(txs: number[]) {
             logger.error(`error at tx sync: ${e}`);
         }
     }
+}
+
+async function saveBlocksAndTxs(blocks: Block[]) {
+    const txs = getTxsFromBlocks(blocks);
+    const transformedToDbBlocks = blocks.map(transformBlockDataForDb);
+    const transformedToDbTxs = txs.map(transformTxDataForDb);
+
+    await Block.bulkCreate(transformedToDbBlocks, {
+        ignoreDuplicates: true,
+    });
+    const txsRow = await Transaction.bulkCreate(transformedToDbTxs, {
+        ignoreDuplicates: true,
+    });
+
+    await syncTxs(txsRow.map((tx) => tx.id));
 }
