@@ -109,6 +109,7 @@ class StatsController {
         });
         const blocksCount = stats?.db_height;
         if (!blocksCount) return res.status(500);
+
         const blocks = await Block.findAll({
             where: {
                 timestamp: {
@@ -116,13 +117,18 @@ class StatsController {
                     [Op.lte]: end,
                 },
             },
-        });
+            raw: true,
+            attributes: [
+                "block_cumulative_size",
+            ]
+        });    
 
         const allBlocksSize = blocks.reduce(
             (blocksSize, block) =>
                 blocksSize.plus(new Decimal(block.block_cumulative_size)),
             new Decimal(0)
         );
+
         const avgBlockSize = allBlocksSize.dividedBy(blocksCount);
         return res
             .status(200)
