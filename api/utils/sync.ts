@@ -46,11 +46,14 @@ export async function syncBlocks() {
         let databaseHeight = await getDbHeight();
         const blockchainHeight = await getBlockchainHeight();
 
-        while (blockchainHeight - databaseHeight > 100) {
+
+        const BLOCKS_PER_REQUEST = 100;
+
+        while (blockchainHeight - databaseHeight > BLOCKS_PER_REQUEST) {
             const blockPromises = Array.from({ length: 10 }, () => {
-                if (blockchainHeight - databaseHeight <= 100) return;
-                if (databaseHeight + 100 > blockchainHeight) return;
-                return getBlocksDetails((databaseHeight += 100), 100);
+                if (blockchainHeight - databaseHeight <= BLOCKS_PER_REQUEST) return;
+                if (databaseHeight + BLOCKS_PER_REQUEST > blockchainHeight) return;
+                return getBlocksDetails((databaseHeight += BLOCKS_PER_REQUEST), BLOCKS_PER_REQUEST);
             }).filter(Boolean);
 
             const blocksPack = await Promise.all(blockPromises);
