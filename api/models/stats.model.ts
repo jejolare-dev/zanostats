@@ -6,6 +6,9 @@ class Stats extends Model {
     declare db_height: number;
     declare assets_count: number;
     declare alias_count: number;
+    declare matrix_alias_count: number;
+    declare whitelisted_assets_count: number;
+    declare premium_alias_count: number;
 }
 
 Stats.init(
@@ -30,6 +33,21 @@ Stats.init(
             type: DataTypes.INTEGER,
             allowNull: false,
             defaultValue: 0,
+        },
+        matrix_alias_count: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0,
+        },
+        whitelisted_assets_count: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 1,
+        },
+        premium_alias_count: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 1,
         },
     },
     { sequelize, modelName: "stats" }

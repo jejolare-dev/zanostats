@@ -128,3 +128,39 @@ export async function getStats() {
         console.error(e);
     }
 }
+
+export async function getMatrixAdressesCount() {
+    try {
+        const matrixApiUrl = process.env.MATRIX_API_URL;
+        const result: any = await axios.get(
+            `${matrixApiUrl}/get-registered-addresses`,
+            {
+                params: {
+                    page: 1,
+                    items: Number.MAX_SAFE_INTEGER,
+                },
+            }
+        );
+        const matrixAliasesCount = (result?.data?.addresses || []).filter(
+            (address) => address.registered
+        ).length;
+        return matrixAliasesCount;
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+export async function getPremiumAliasesCount() {
+    try {
+        const result: any = await axios.post(zanoURL, {
+            id: 0,
+            jsonrpc: "2.0",
+            method: "get_all_alias_details",
+            params: {},
+        });
+        return result.data.result.aliases.filter((e) => e.alias.length <= 5)
+            .length;
+    } catch (e) {
+        console.error(e);
+    }
+}

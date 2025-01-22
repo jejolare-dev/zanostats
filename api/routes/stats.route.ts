@@ -5,8 +5,8 @@ import handlerTryCatch from "../utils/utils";
 export const statsRoute = Router();
 
 statsRoute.post(
-    "/get-confirmed-txs-per-day",
-    handlerTryCatch(statsController.getConfirmedTxsPerDay)
+    "/get-confirmed-txs",
+    handlerTryCatch(statsController.getConfirmedTxs)
 );
 
 statsRoute.post(
@@ -20,13 +20,13 @@ statsRoute.post(
 );
 
 statsRoute.post(
-    "/get-registered-aliases-count",
-    handlerTryCatch(statsController.getRegisteredAliasesCount)
+    "/get-aliases-count",
+    handlerTryCatch(statsController.getAliasesCount)
 );
 
 statsRoute.post(
-    "/get-registered-assets-count",
-    handlerTryCatch(statsController.getRegisteredAssetsCount)
+    "/get-assets-count",
+    handlerTryCatch(statsController.getAssetsCount)
 );
 
 statsRoute.post(
