@@ -4,7 +4,6 @@ import Transaction from "../models/transaction.model";
 import { Op } from "sequelize";
 import Decimal from "decimal.js";
 import { getStats } from "../utils/methods";
-import { cache } from "../server";
 
 class StatsController {
     async getAliasesCount(req: Request, res: Response) {
@@ -42,28 +41,22 @@ class StatsController {
         const avgNumOfTxsPerBlocks = await Promise.all(
             data.map(async (timestamp: { start: number; end: number }) => {
                 const { start, end } = timestamp;
-                const key = end.toString();
-                if (cache.getAvgNumberOfTxsPerBlock[key] === undefined) {
-                    console.log(cache.getAvgNumberOfTxsPerBlock[key]);
-
-                    const blocks = await Block.findAll({
-                        where: {
-                            timestamp: {
-                                [Op.gte]: start,
-                                [Op.lte]: end,
-                            },
+                const blocks = await Block.findAll({
+                    where: {
+                        timestamp: {
+                            [Op.gte]: start,
+                            [Op.lte]: end,
                         },
-                        raw: true,
-                        attributes: ["txs_count"],
-                    });
-                    const allTxsCount = blocks.reduce(
-                        (txsCount, block) => txsCount + block.txs_count,
-                        0
-                    );
-                    const avgNumOfTxsPerBlock = allTxsCount / blocksCount;
-                    cache.getAvgNumberOfTxsPerBlock[key] = avgNumOfTxsPerBlock;
-                }
-                return cache.getAvgNumberOfTxsPerBlock[key];
+                    },
+                    raw: true,
+                    attributes: ["txs_count"],
+                });
+                const allTxsCount = blocks.reduce(
+                    (txsCount, block) => txsCount + block.txs_count,
+                    0
+                );
+                const avgNumOfTxsPerBlock = allTxsCount / blocksCount;
+                return avgNumOfTxsPerBlock;
             })
         );
 
@@ -77,33 +70,28 @@ class StatsController {
         const burnedZanoResult = await Promise.all(
             data.map(async (timestamp: { start: number; end: number }) => {
                 const { start, end } = timestamp;
-                const key = end.toString();
-                console.log(cache.getZanoBurned[key]);
-                if (cache.getZanoBurned[key] === undefined) {
-                    const blocks = await Block.findAll({
-                        where: {
-                            height: {
-                                [Op.gte]: 2555000,
-                            },
-                            timestamp: {
-                                [Op.gte]: start,
-                                [Op.lte]: end,
-                            },
+                const blocks = await Block.findAll({
+                    where: {
+                        height: {
+                            [Op.gte]: 2555000,
                         },
-                        raw: true,
-                        attributes: ["total_fee"],
-                    });
-                    const burnedZanoBig = blocks.reduce(
-                        (totalFee, block) =>
-                            totalFee.plus(new Decimal(Number(block.total_fee))),
-                        new Decimal(0)
-                    );
-                    const burnedZano = burnedZanoBig
-                        .dividedBy(new Decimal(10).pow(12))
-                        .toNumber();
-                    cache.getZanoBurned[key] = burnedZano;
-                }
-                return cache.getZanoBurned[key];
+                        timestamp: {
+                            [Op.gte]: start,
+                            [Op.lte]: end,
+                        },
+                    },
+                    raw: true,
+                    attributes: ["total_fee"],
+                });
+                const burnedZanoBig = blocks.reduce(
+                    (totalFee, block) =>
+                        totalFee.plus(new Decimal(Number(block.total_fee))),
+                    new Decimal(0)
+                );
+
+                return burnedZanoBig
+                    .dividedBy(new Decimal(10).pow(12))
+                    .toNumber();
             })
         );
 
@@ -120,33 +108,26 @@ class StatsController {
         const avgBlockSizes = await Promise.all(
             data.map(async (timestamp: { start: number; end: number }) => {
                 const { start, end } = timestamp;
-                const key = end.toString();
-                if (cache.getAvgBlockSize[key] === undefined) {
-                    console.log(cache.getAvgBlockSize[key]);
-                    const blocks = await Block.findAll({
-                        where: {
-                            timestamp: {
-                                [Op.gte]: start,
-                                [Op.lte]: end,
-                            },
+                const blocks = await Block.findAll({
+                    where: {
+                        timestamp: {
+                            [Op.gte]: start,
+                            [Op.lte]: end,
                         },
-                        raw: true,
-                        attributes: ["block_cumulative_size"],
-                    });
+                    },
+                    raw: true,
+                    attributes: ["block_cumulative_size"],
+                });
 
-                    const allBlocksSize = blocks.reduce(
-                        (blocksSize, block) =>
-                            blocksSize.plus(
-                                new Decimal(block.block_cumulative_size)
-                            ),
-                        new Decimal(0)
-                    );
+                const allBlocksSize = blocks.reduce(
+                    (blocksSize, block) =>
+                        blocksSize.plus(
+                            new Decimal(block.block_cumulative_size)
+                        ),
+                    new Decimal(0)
+                );
 
-                    cache.getAvgBlockSize[key] = allBlocksSize
-                        .dividedBy(blocksCount)
-                        .toNumber();
-                }
-                return cache.getAvgBlockSize[key];
+                return allBlocksSize.dividedBy(blocksCount).toNumber();
             })
         );
 
@@ -158,28 +139,25 @@ class StatsController {
         const stats = await getStats();
         const currHeight = stats?.db_height;
         if (!currHeight) {
-            return res.status(200).send({ success: false });
+            return res.status(500).send({ success: false });
         }
         const confirmedTxs = await Promise.all(
             data.map(async (timestamp: { start: number; end: number }) => {
                 const { start, end } = timestamp;
                 const key = end.toString();
-                if (cache.getConfirmedTransactions[key] === undefined) {
-                    const txs = await Transaction.findAll({
-                        where: {
-                            timestamp: {
-                                [Op.gte]: start,
-                                [Op.lte]: end,
-                            },
+                const txs = await Transaction.findAll({
+                    where: {
+                        timestamp: {
+                            [Op.gte]: start,
+                            [Op.lte]: end,
                         },
-                        raw: true,
-                        attributes: ["keeper_block"],
-                    });
-                    cache.getConfirmedTransactions[key] = txs.filter(
-                        (tx) => currHeight - tx.keeper_block > 20
-                    ).length;
-                }
-                return cache.getConfirmedTransactions[key];
+                    },
+                    raw: true,
+                    attributes: ["keeper_block"],
+                });
+
+                return txs.filter((tx) => currHeight - tx.keeper_block > 20)
+                    .length;
             })
         );
         return res.status(200).send({

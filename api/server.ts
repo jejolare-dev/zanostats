@@ -4,7 +4,7 @@ import logger from "@/api/logger";
 import sequelize from "@/api/sequelize";
 import initdb from "@/api/database";
 import { statsRoute } from "./routes/stats.route";
-import { cacheData, init, syncBlocks, syncStats } from "./utils/sync";
+import { init, syncBlocks, syncStats } from "./utils/sync";
 import cors from "cors";
 
 if (!process.env.JWT_SECRET) {
@@ -62,18 +62,6 @@ process.on("unhandledRejection", (reason, promise) => {
             syncLaunced = false;
         }
     }, 5000);
-
-    // (async () => {
-    //     while (true) {
-    //         await cacheData();
-    //         await new Promise((r) => setTimeout(r, 10000));
-    //     }
-    // })();
 })();
 
-export const cache = {
-    getConfirmedTransactions: {},
-    getAvgNumberOfTxsPerBlock: {},
-    getAvgBlockSize: {},
-    getZanoBurned: {},
-};
+

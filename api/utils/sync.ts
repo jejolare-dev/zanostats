@@ -22,9 +22,6 @@ import {
     getTxDetails,
     updateDbHeight,
 } from "./methods";
-import { cache } from "../server";
-import { Op } from "sequelize";
-import Decimal from "decimal.js";
 
 export async function init() {
     const stats = await getStats();
@@ -145,109 +142,109 @@ async function saveBlocksAndTxs(blocks: Block[]) {
 
     await syncTxs(txsRow.map((tx) => tx.id));
 }
+// TODO: Remove
+// export async function cacheData() {
+//     const data = [
+//         ...generateMonthsTimestamps(),
+//         ...generateWeekTimestamps(),
+//         ...generateYearsTimestamps(),
+//     ];
+//     const blocksCount = await getDbHeight();
+//     await Promise.all(
+//         data.map(async (timestamp: { start: number; end: number }) => {
+//             const { start, end } = timestamp;
+//             const key = end.toString();
+//             const txs = await Transaction.findAll({
+//                 where: {
+//                     timestamp: {
+//                         [Op.gte]: start,
+//                         [Op.lte]: end,
+//                     },
+//                 },
+//                 raw: true,
+//                 attributes: ["keeper_block"],
+//             });
+//             cache.getConfirmedTransactions[key] = txs.filter(
+//                 (tx) => blocksCount - tx.keeper_block > 20
+//             ).length;
+//         })
+//     );
+//     await Promise.all(
+//         data.map(async (timestamp: { start: number; end: number }) => {
+//             const { start, end } = timestamp;
+//             const key = end.toString();
 
-export async function cacheData() {
-    const data = [
-        ...generateMonthsTimestamps(),
-        ...generateWeekTimestamps(),
-        ...generateYearsTimestamps(),
-    ];
-    const blocksCount = await getDbHeight();
-    await Promise.all(
-        data.map(async (timestamp: { start: number; end: number }) => {
-            const { start, end } = timestamp;
-            const key = end.toString();
-            const txs = await Transaction.findAll({
-                where: {
-                    timestamp: {
-                        [Op.gte]: start,
-                        [Op.lte]: end,
-                    },
-                },
-                raw: true,
-                attributes: ["keeper_block"],
-            });
-            cache.getConfirmedTransactions[key] = txs.filter(
-                (tx) => blocksCount - tx.keeper_block > 20
-            ).length;
-        })
-    );
-    await Promise.all(
-        data.map(async (timestamp: { start: number; end: number }) => {
-            const { start, end } = timestamp;
-            const key = end.toString();
+//             const blocks = await Block.findAll({
+//                 where: {
+//                     timestamp: {
+//                         [Op.gte]: start,
+//                         [Op.lte]: end,
+//                     },
+//                 },
+//                 raw: true,
+//                 attributes: ["block_cumulative_size"],
+//             });
 
-            const blocks = await Block.findAll({
-                where: {
-                    timestamp: {
-                        [Op.gte]: start,
-                        [Op.lte]: end,
-                    },
-                },
-                raw: true,
-                attributes: ["block_cumulative_size"],
-            });
+//             const allBlocksSize = blocks.reduce(
+//                 (blocksSize, block) =>
+//                     blocksSize.plus(new Decimal(block.block_cumulative_size)),
+//                 new Decimal(0)
+//             );
 
-            const allBlocksSize = blocks.reduce(
-                (blocksSize, block) =>
-                    blocksSize.plus(new Decimal(block.block_cumulative_size)),
-                new Decimal(0)
-            );
+//             cache.getAvgBlockSize[key] = allBlocksSize
+//                 .dividedBy(blocksCount)
+//                 .toNumber();
+//         })
+//     );
+//     await Promise.all(
+//         data.map(async (timestamp: { start: number; end: number }) => {
+//             const { start, end } = timestamp;
+//             const key = end.toString();
 
-            cache.getAvgBlockSize[key] = allBlocksSize
-                .dividedBy(blocksCount)
-                .toNumber();
-        })
-    );
-    await Promise.all(
-        data.map(async (timestamp: { start: number; end: number }) => {
-            const { start, end } = timestamp;
-            const key = end.toString();
-
-            const blocks = await Block.findAll({
-                where: {
-                    height: {
-                        [Op.gte]: 2555000,
-                    },
-                    timestamp: {
-                        [Op.gte]: start,
-                        [Op.lte]: end,
-                    },
-                },
-                raw: true,
-                attributes: ["total_fee"],
-            });
-            const burnedZanoBig = blocks.reduce(
-                (totalFee, block) =>
-                    totalFee.plus(new Decimal(Number(block.total_fee))),
-                new Decimal(0)
-            );
-            const burnedZano = burnedZanoBig
-                .dividedBy(new Decimal(10).pow(12))
-                .toNumber();
-            cache.getZanoBurned[key] = burnedZano;
-        })
-    );
-    await Promise.all(
-        data.map(async (timestamp: { start: number; end: number }) => {
-            const { start, end } = timestamp;
-            const key = end.toString();
-            const blocks = await Block.findAll({
-                where: {
-                    timestamp: {
-                        [Op.gte]: start,
-                        [Op.lte]: end,
-                    },
-                },
-                raw: true,
-                attributes: ["txs_count"],
-            });
-            const allTxsCount = blocks.reduce(
-                (txsCount, block) => txsCount + block.txs_count,
-                0
-            );
-            const avgNumOfTxsPerBlock = allTxsCount / blocksCount;
-            cache.getAvgNumberOfTxsPerBlock[key] = avgNumOfTxsPerBlock;
-        })
-    );
-}
+//             const blocks = await Block.findAll({
+//                 where: {
+//                     height: {
+//                         [Op.gte]: 2555000,
+//                     },
+//                     timestamp: {
+//                         [Op.gte]: start,
+//                         [Op.lte]: end,
+//                     },
+//                 },
+//                 raw: true,
+//                 attributes: ["total_fee"],
+//             });
+//             const burnedZanoBig = blocks.reduce(
+//                 (totalFee, block) =>
+//                     totalFee.plus(new Decimal(Number(block.total_fee))),
+//                 new Decimal(0)
+//             );
+//             const burnedZano = burnedZanoBig
+//                 .dividedBy(new Decimal(10).pow(12))
+//                 .toNumber();
+//             cache.getZanoBurned[key] = burnedZano;
+//         })
+//     );
+//     await Promise.all(
+//         data.map(async (timestamp: { start: number; end: number }) => {
+//             const { start, end } = timestamp;
+//             const key = end.toString();
+//             const blocks = await Block.findAll({
+//                 where: {
+//                     timestamp: {
+//                         [Op.gte]: start,
+//                         [Op.lte]: end,
+//                     },
+//                 },
+//                 raw: true,
+//                 attributes: ["txs_count"],
+//             });
+//             const allTxsCount = blocks.reduce(
+//                 (txsCount, block) => txsCount + block.txs_count,
+//                 0
+//             );
+//             const avgNumOfTxsPerBlock = allTxsCount / blocksCount;
+//             cache.getAvgNumberOfTxsPerBlock[key] = avgNumOfTxsPerBlock;
+//         })
+//     );
+// }
