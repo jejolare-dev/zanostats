@@ -19,6 +19,7 @@ import {
     getMatrixAdressesCount,
     getPremiumAliasesCount,
     getStats,
+    getTxDetails,
     updateDbHeight,
 } from "./methods";
 import { cache } from "../server";
@@ -107,28 +108,28 @@ export async function syncStats() {
 }
 
 export async function syncTxs(txs: number[]) {
-    // while (txs.length) {
-    //     try {
-    //         const txId = txs.pop();
-    //         if (!txId) return;
-    //         const txToUpdate = await Transaction.findOne({
-    //             where: {
-    //                 id: txId,
-    //             },
-    //         });
-    //         if (!txToUpdate) return;
-    //         const resTx = await getTxDetails(txToUpdate?.tx_id);
-    //         if (!resTx) throw `Fetch error tx ${txToUpdate?.tx_id}`;
-    //         const tranformedTx = transformTxDataForDb(resTx);
-    //         txToUpdate?.set("ins", tranformedTx.ins);
-    //         txToUpdate?.set("outs", tranformedTx.outs);
-    //         txToUpdate?.set("extra", tranformedTx.extra);
-    //         txToUpdate?.set("attachments", tranformedTx.attachments);
-    //         await txToUpdate?.save();
-    //     } catch (e) {
-    //         logger.error(`error at tx sync: ${e}`);
-    //     }
-    // }
+    while (txs.length) {
+        try {
+            const txId = txs.pop();
+            if (!txId) return;
+            const txToUpdate = await Transaction.findOne({
+                where: {
+                    id: txId,
+                },
+            });
+            if (!txToUpdate) return;
+            const resTx = await getTxDetails(txToUpdate?.tx_id);
+            if (!resTx) throw `Fetch error tx ${txToUpdate?.tx_id}`;
+            const tranformedTx = transformTxDataForDb(resTx);
+            txToUpdate?.set("ins", tranformedTx.ins);
+            txToUpdate?.set("outs", tranformedTx.outs);
+            txToUpdate?.set("extra", tranformedTx.extra);
+            txToUpdate?.set("attachments", tranformedTx.attachments);
+            await txToUpdate?.save();
+        } catch (e) {
+            logger.error(`error at tx sync: ${e}`);
+        }
+    }
 }
 
 async function saveBlocksAndTxs(blocks: Block[]) {
