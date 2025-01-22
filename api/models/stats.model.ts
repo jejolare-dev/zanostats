@@ -1,56 +1,46 @@
-import { DataTypes, Model } from "sequelize";
-import sequelize from "@/api/sequelize";
+import { Op } from "sequelize";
+import Block from "../schemes/block.model";
+import Decimal from "decimal.js";
 
-class Stats extends Model {
-    declare readonly id: number;
-    declare db_height: number;
-    declare assets_count: number;
-    declare alias_count: number;
-    declare matrix_alias_count: number;
-    declare whitelisted_assets_count: number;
-    declare premium_alias_count: number;
+interface InputDataItem {
+    start: number;
+    end: number;
 }
 
-Stats.init(
-    {
-        id: {
-            type: DataTypes.INTEGER,
-            primaryKey: true,
-            autoIncrement: false,
-            defaultValue: 1,
-        },
-        db_height: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            defaultValue: 0,
-        },
-        assets_count: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            defaultValue: 0,
-        },
-        alias_count: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            defaultValue: 0,
-        },
-        matrix_alias_count: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            defaultValue: 0,
-        },
-        whitelisted_assets_count: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            defaultValue: 1,
-        },
-        premium_alias_count: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            defaultValue: 1,
-        },
-    },
-    { sequelize, modelName: "stats" }
-);
+type InputData = InputDataItem[];
 
-export default Stats;
+class StatsModel {
+    async getZanoBurned(data: InputData) {
+        return await Promise.all(
+            data.map(async (timestamp: { start: number; end: number }) => {
+                const { start, end } = timestamp;
+                const blocks = await Block.findAll({
+                    where: {
+                        height: {
+                            [Op.gte]: 2555000,
+                        },
+                        timestamp: {
+                            [Op.gte]: start,
+                            [Op.lte]: end,
+                        },
+                    },
+                    raw: true,
+                    attributes: ["total_fee"],
+                });
+                const burnedZanoBig = blocks.reduce(
+                    (totalFee, block) =>
+                        totalFee.plus(new Decimal(Number(block.total_fee))),
+                    new Decimal(0)
+                );
+
+                return burnedZanoBig
+                    .dividedBy(new Decimal(10).pow(12))
+                    .toNumber();
+            })
+        )
+    }
+}
+const statsModel = new StatsModel();
+
+
+export default statsModel;

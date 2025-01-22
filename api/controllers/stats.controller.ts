@@ -1,11 +1,19 @@
 import { Request, Response } from "express";
-import Block from "../models/block.model";
-import Transaction from "../models/transaction.model";
+import Block from "../schemes/block.model";
+import Transaction from "../schemes/transaction.model";
 import { Op } from "sequelize";
 import Decimal from "decimal.js";
 import { getStats } from "../utils/methods";
+import statsModel from "../models/stats.model";
+import cacheService from "../services/cache.service";
 
 class StatsController {
+
+    async getCachedData(req: Request, res: Response) {
+        const cachedData = await cacheService.getCachedData();
+        return res.status(200).send({ success: true, data: cachedData });
+    }
+
     async getAliasesCount(req: Request, res: Response) {
         const stats = await getStats();
         if (!stats) return res.status(500);
@@ -67,33 +75,7 @@ class StatsController {
 
     async getZanoBurned(req: Request, res: Response) {
         const data = req.body;
-        const burnedZanoResult = await Promise.all(
-            data.map(async (timestamp: { start: number; end: number }) => {
-                const { start, end } = timestamp;
-                const blocks = await Block.findAll({
-                    where: {
-                        height: {
-                            [Op.gte]: 2555000,
-                        },
-                        timestamp: {
-                            [Op.gte]: start,
-                            [Op.lte]: end,
-                        },
-                    },
-                    raw: true,
-                    attributes: ["total_fee"],
-                });
-                const burnedZanoBig = blocks.reduce(
-                    (totalFee, block) =>
-                        totalFee.plus(new Decimal(Number(block.total_fee))),
-                    new Decimal(0)
-                );
-
-                return burnedZanoBig
-                    .dividedBy(new Decimal(10).pow(12))
-                    .toNumber();
-            })
-        );
+        const burnedZanoResult = await statsModel.getZanoBurned(data);
 
         return res.status(200).send({ success: true, data: burnedZanoResult });
     }

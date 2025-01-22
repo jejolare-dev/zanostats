@@ -1,5 +1,5 @@
 import axios from "axios";
-import Stats from "../models/stats.model";
+import Stats from "../schemes/stats.model";
 
 const zanoURL = process.env.ZANOD_URL || "http://37.27.100.59:10500/json_rpc";
 

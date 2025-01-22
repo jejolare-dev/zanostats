@@ -33,3 +33,8 @@ statsRoute.post(
     "/get-zano-burned",
     handlerTryCatch(statsController.getZanoBurned)
 );
+
+statsRoute.post(
+    "/get-cached-data",
+    handlerTryCatch(statsController.getCachedData)
+);

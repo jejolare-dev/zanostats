@@ -1,6 +1,6 @@
-import Stats from "../models/stats.model";
-import Block from "../models/block.model";
-import Transaction from "../models/transaction.model";
+import Stats from "../schemes/stats.model";
+import Block from "../schemes/block.model";
+import Transaction from "../schemes/transaction.model";
 import logger from "../logger";
 import {
     generateMonthsTimestamps,
