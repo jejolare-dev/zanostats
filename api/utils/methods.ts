@@ -164,3 +164,15 @@ export async function getPremiumAliasesCount() {
         console.error(e);
     }
 }
+
+export async function getZanoPrice() {
+    try {
+        const result = await fetch(
+            "https://api.coingecko.com/api/v3/simple/price?ids=zano&vs_currencies=usd&include_24hr_change=true"
+        ).then((res) => res.json());
+        return result;
+    } catch (e) {
+        console.error(e);
+    }
+}
+

@@ -38,3 +38,8 @@ statsRoute.post(
     "/get-cached-data",
     handlerTryCatch(statsController.getCachedData)
 );
+
+statsRoute.post(
+    "/get-zano-price",
+    handlerTryCatch(statsController.getCachedData)
+);

@@ -1,6 +1,9 @@
 import { Op } from "sequelize";
 import Block from "../schemes/block.model";
+import Transaction from "../schemes/transaction.model";
+
 import Decimal from "decimal.js";
+import { getDbHeight, getStats } from "../utils/methods";
 
 interface InputDataItem {
     start: number;
@@ -37,10 +40,94 @@ class StatsModel {
                     .dividedBy(new Decimal(10).pow(12))
                     .toNumber();
             })
-        )
+        );
+    }
+
+    async getAvgNumOfTxsPerBlock(data: InputData) {
+        const blocksCount = await getDbHeight();
+        return await Promise.all(
+            data.map(async (timestamp: { start: number; end: number }) => {
+                const { start, end } = timestamp;
+                const blocks = await Block.findAll({
+                    where: {
+                        timestamp: {
+                            [Op.gte]: start,
+                            [Op.lte]: end,
+                        },
+                    },
+                    raw: true,
+                    attributes: ["txs_count"],
+                });
+                const allTxsCount = blocks.reduce(
+                    (txsCount, block) => txsCount + block.txs_count,
+                    0
+                );
+                const avgNumOfTxsPerBlock = allTxsCount / blocksCount;
+                return avgNumOfTxsPerBlock;
+            })
+        );
+    }
+
+    async getAvgBlockSize(data: InputData) {
+        const blocksCount = await getDbHeight();
+        return await Promise.all(
+            data.map(async (timestamp: { start: number; end: number }) => {
+                const { start, end } = timestamp;
+                const blocks = await Block.findAll({
+                    where: {
+                        timestamp: {
+                            [Op.gte]: start,
+                            [Op.lte]: end,
+                        },
+                    },
+                    raw: true,
+                    attributes: ["block_cumulative_size"],
+                });
+
+                const allBlocksSize = blocks.reduce(
+                    (blocksSize, block) =>
+                        blocksSize.plus(
+                            new Decimal(block.block_cumulative_size)
+                        ),
+                    new Decimal(0)
+                );
+
+                return allBlocksSize.dividedBy(blocksCount).toNumber();
+            })
+        );
+    }
+
+    async getConfirmedTxs(data: InputData) {
+        const height = await getDbHeight();
+        return await Promise.all(
+            data.map(async (timestamp: { start: number; end: number }) => {
+                const { start, end } = timestamp;
+                const key = end.toString();
+                const txs = await Transaction.findAll({
+                    where: {
+                        timestamp: {
+                            [Op.gte]: start,
+                            [Op.lte]: end,
+                        },
+                    },
+                    raw: true,
+                    attributes: ["keeper_block"],
+                });
+
+                return txs.filter((tx) => height - tx.keeper_block > 20).length;
+            })
+        );
+    }
+
+    async getAliasesCount() {
+        const stats = await getStats();
+        if (!stats) return 0;
+
+        const { alias_count } = stats;
+
+        return alias_count;
     }
 }
 const statsModel = new StatsModel();
-
 
 export default statsModel;

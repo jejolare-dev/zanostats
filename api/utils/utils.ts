@@ -1,9 +1,6 @@
 import { Request, Response } from "express";
 import logger from "@/api/logger";
-interface Timestamp {
-    start: number;
-    end: number;
-}
+
 export default function handlerTryCatch(
     handler: (req: Request, res: Response) => Promise<unknown> | unknown
 ) {
@@ -103,7 +100,7 @@ export const generateWeekTimestamps = () => {
         end: lastHour.getTime(),
     });
 
-    return timestamps;
+    return timestamps.sort((a, b) => a.end - b.end);
 };
 
 export const generateMonthsTimestamps = () => {
@@ -136,7 +133,7 @@ export const generateMonthsTimestamps = () => {
         start: currMonth.getTime(),
         end: Date.now(),
     });
-    return timestamps;
+    return timestamps.sort((a, b) => a.end - b.end);
 };
 
 export const generateYearsTimestamps = () => {
@@ -157,5 +154,5 @@ export const generateYearsTimestamps = () => {
         start: new Date(currentYear, 0, 1).getTime(),
         end: Date.now(),
     });
-    return timestamps;
+    return timestamps.sort((a, b) => a.end - b.end);
 };

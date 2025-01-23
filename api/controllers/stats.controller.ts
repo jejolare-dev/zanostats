@@ -8,10 +8,14 @@ import statsModel from "../models/stats.model";
 import cacheService from "../services/cache.service";
 
 class StatsController {
-
     async getCachedData(req: Request, res: Response) {
         const cachedData = await cacheService.getCachedData();
         return res.status(200).send({ success: true, data: cachedData });
+    }
+
+    async getZanoPrice(req: Request, res: Response) {
+        const cachedData = await cacheService.getCachedData();
+        return res.status(200).send({ success: true, data: cachedData.zanoPrice });
     }
 
     async getAliasesCount(req: Request, res: Response) {
