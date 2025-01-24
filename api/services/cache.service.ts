@@ -95,6 +95,5 @@ class CacheService {
 }
 
 const cacheService = new CacheService();
-cacheService.init();
 
 export default cacheService;

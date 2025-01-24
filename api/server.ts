@@ -6,6 +6,7 @@ import initdb from "@/api/database";
 import { statsRoute } from "./routes/stats.route";
 import { init, syncBlocks, syncStats } from "./utils/sync";
 import cors from "cors";
+import cacheService from "./services/cache.service";
 
 if (!process.env.JWT_SECRET) {
     throw new Error("JWT_SECRET is not provided at .env file");
@@ -34,6 +35,7 @@ process.on("unhandledRejection", (reason, promise) => {
     await initdb();
     await sequelize.authenticate();
     await sequelize.sync();
+    cacheService.init();
     app.use(cors());
 
     app.use(express.json());
