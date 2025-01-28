@@ -23,6 +23,7 @@ class StatsController {
         if (!stats) return res.status(500);
 
         const { premium_alias_count, alias_count, matrix_alias_count } = stats;
+        
         return res.status(200).send({
             success: true,
             data: {

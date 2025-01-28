@@ -121,11 +121,32 @@ class StatsModel {
 
     async getAliasesCount() {
         const stats = await getStats();
-        if (!stats) return 0;
+        if (!stats) {
+            return {
+                alias_count: 0,
+                premium_alias_count: 0,
+                matrix_alias_count: 0,
+            };
+        }
 
-        const { alias_count } = stats;
+        const { alias_count, premium_alias_count, matrix_alias_count } = stats;
 
-        return alias_count;
+        return { alias_count, premium_alias_count, matrix_alias_count };
+    }
+
+    async getAssetsCount() {
+        const stats = await getStats();
+        if (!stats) {
+            return {
+                assets_count: 0,
+                whitelisted_assets_count: 0,
+            };
+        }
+        const { assets_count, whitelisted_assets_count } = stats;
+        return {
+            assets_count,
+            whitelisted_assets_count,
+        };
     }
 }
 const statsModel = new StatsModel();
