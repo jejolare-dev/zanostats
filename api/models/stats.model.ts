@@ -44,7 +44,6 @@ class StatsModel {
     }
 
     async getAvgNumOfTxsPerBlock(data: InputData) {
-        const blocksCount = await getDbHeight();
         return await Promise.all(
             data.map(async (timestamp: { start: number; end: number }) => {
                 const { start, end } = timestamp;
@@ -62,7 +61,7 @@ class StatsModel {
                     (txsCount, block) => txsCount + block.txs_count,
                     0
                 );
-                const avgNumOfTxsPerBlock = allTxsCount / blocksCount;
+                const avgNumOfTxsPerBlock = allTxsCount / blocks.length;
                 return avgNumOfTxsPerBlock;
             })
         );

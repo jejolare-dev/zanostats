@@ -48,8 +48,6 @@ class StatsController {
         const data = req.body;
         const stats = await getStats();
         if (!stats) return res.status(500);
-        const blocksCount = stats.db_height;
-        if (!blocksCount) return res.status(500);
 
         const avgNumOfTxsPerBlocks = await Promise.all(
             data.map(async (timestamp: { start: number; end: number }) => {
@@ -68,7 +66,7 @@ class StatsController {
                     (txsCount, block) => txsCount + block.txs_count,
                     0
                 );
-                const avgNumOfTxsPerBlock = allTxsCount / blocksCount;
+                const avgNumOfTxsPerBlock = allTxsCount / blocks.length;
                 return avgNumOfTxsPerBlock;
             })
         );
