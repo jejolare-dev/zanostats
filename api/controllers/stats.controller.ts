@@ -87,8 +87,6 @@ class StatsController {
         const data = req.body;
         const stats = await getStats();
         if (!stats) return res.status(500);
-        const blocksCount = stats?.db_height;
-        if (!blocksCount) return res.status(500);
 
         const avgBlockSizes = await Promise.all(
             data.map(async (timestamp: { start: number; end: number }) => {
@@ -112,7 +110,7 @@ class StatsController {
                     new Decimal(0)
                 );
 
-                return allBlocksSize.dividedBy(blocksCount).toNumber();
+                return allBlocksSize.dividedBy(blocks.length).toNumber();
             })
         );
 
