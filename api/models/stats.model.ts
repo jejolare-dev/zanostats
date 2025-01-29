@@ -62,11 +62,7 @@ class StatsModel {
                     0
                 );
                 const avgNumOfTxsPerBlock = allTxsCount / blocks.length;
-                console.log("avgNumOfTxsPerBlock: ", {
-                    avgNumOfTxsPerBlock,
-                    allTxsCount,
-                    blocksLength: blocks.length,
-                });
+
                 return avgNumOfTxsPerBlock;
             })
         );

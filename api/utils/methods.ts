@@ -133,18 +133,10 @@ export async function getMatrixAdressesCount() {
     try {
         const matrixApiUrl = process.env.MATRIX_API_URL;
         const result: any = await axios.get(
-            `${matrixApiUrl}/get-registered-addresses`,
-            {
-                params: {
-                    page: 1,
-                    items: Number.MAX_SAFE_INTEGER,
-                },
-            }
+            `${matrixApiUrl}/get-addresses-count`
         );
-        const matrixAliasesCount = (result?.data?.addresses || []).filter(
-            (address) => address.registered
-        ).length;
-        return matrixAliasesCount;
+        const { data } = result.data;
+        return data;
     } catch (e) {
         console.error(e);
     }
@@ -175,4 +167,3 @@ export async function getZanoPrice() {
         console.error(e);
     }
 }
-

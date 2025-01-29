@@ -16,7 +16,7 @@ import {
     getMatrixAdressesCount,
     getPremiumAliasesCount,
     getStats,
-    getTxDetails,
+    // getTxDetails,
     updateDbHeight,
 } from "./methods";
 

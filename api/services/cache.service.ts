@@ -13,13 +13,25 @@ import {
     PREV_YEAR,
 } from "@/api/constants";
 
+
+type CacheDataWithOffset<T> = {
+    current: T;
+    offset: T;
+};
+
+type TimePeriodCacheData<T> = {
+    year: CacheDataWithOffset<T>;
+    day: CacheDataWithOffset<T>;
+    month: CacheDataWithOffset<T>;
+};
+
 class CacheService {
     private inited: boolean = false;
     private cache: {
         zanoBured: Record<string, number>;
-        avgNumOfTxsPerBlocks: Record<string, number[]>;
-        avgBlocksSize: Record<string, number[]>;
-        confirmedTxs: Record<string, number[]>;
+        avgNumOfTxsPerBlocks: TimePeriodCacheData<number[]> | {};
+        avgBlocksSize: TimePeriodCacheData<number[]> | {};
+        confirmedTxs: TimePeriodCacheData<number[]> | {};
         zanoPrice: {
             usd: number;
             usd_24h_change: number;
@@ -49,10 +61,6 @@ class CacheService {
 
         (async () => {
             while (true) {
-                const monthsTimestamps = generateMonthsTimestamps();
-                const weekTimestamps = generateWeekTimestamps();
-                const yearsTimestamps = generateYearsTimestamps();
-
                 try {
                     const burnedZanoTimestamps = [
                         PREV_HOUR,
@@ -90,33 +98,18 @@ class CacheService {
                         all: burnedZanoAll,
                     };
 
-                    this.cache.avgNumOfTxsPerBlocks = {
-                        day: await statsModel.getAvgNumOfTxsPerBlock(
-                            weekTimestamps
-                        ),
-                        month: await statsModel.getAvgNumOfTxsPerBlock(
-                            monthsTimestamps
-                        ),
-                        year: await statsModel.getAvgNumOfTxsPerBlock(
-                            yearsTimestamps
-                        ),
-                    };
+                    this.cache.avgNumOfTxsPerBlocks =
+                        await this.createCacheData(
+                            statsModel.getAvgNumOfTxsPerBlock
+                        );
 
-                    this.cache.avgBlocksSize = {
-                        day: await statsModel.getAvgBlockSize(weekTimestamps),
-                        month: await statsModel.getAvgBlockSize(
-                            monthsTimestamps
-                        ),
-                        year: await statsModel.getAvgBlockSize(yearsTimestamps),
-                    };
+                    this.cache.avgBlocksSize = await this.createCacheData(
+                        statsModel.getAvgBlockSize
+                    );
 
-                    this.cache.confirmedTxs = {
-                        day: await statsModel.getConfirmedTxs(weekTimestamps),
-                        month: await statsModel.getConfirmedTxs(
-                            monthsTimestamps
-                        ),
-                        year: await statsModel.getConfirmedTxs(yearsTimestamps),
-                    };
+                    this.cache.confirmedTxs = await this.createCacheData(
+                        statsModel.getConfirmedTxs
+                    );
 
                     const zanoPriceResult = await getZanoPrice();
 
@@ -150,6 +143,43 @@ class CacheService {
         })();
     }
 
+    async createCacheData(
+        method: (timestamps: { start: number; end: number }[]) => Promise<number[]>
+    ) {
+        const monthsTimestamps = generateMonthsTimestamps();
+        const weekTimestamps = generateWeekTimestamps();
+        const yearsTimestamps = generateYearsTimestamps();
+
+        return {
+            day: {
+                current: await method(weekTimestamps),
+                offset: await method([
+                    {
+                        start: PREV_DAY,
+                        end: Date.now(),
+                    },
+                ]),
+            },
+            month: {
+                current: await method(monthsTimestamps),
+                offset: await method([
+                    {
+                        start: PREV_MONTH,
+                        end: Date.now(),
+                    },
+                ]),
+            },
+            year: {
+                current: await method(yearsTimestamps),
+                offset: await method([
+                    {
+                        start: PREV_YEAR,
+                        end: Date.now(),
+                    },
+                ]),
+            },
+        };
+    }
     async getCachedData() {
         return this.cache;
     }
