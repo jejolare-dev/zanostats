@@ -13,7 +13,6 @@ import {
     PREV_YEAR,
 } from "@/api/constants";
 
-
 type CacheDataWithOffset<T> = {
     current: T;
     offset: T;
@@ -144,39 +143,47 @@ class CacheService {
     }
 
     async createCacheData(
-        method: (timestamps: { start: number; end: number }[]) => Promise<number[]>
+        method: (
+            timestamps: { start: number; end: number }[]
+        ) => Promise<number[]>
     ) {
         const monthsTimestamps = generateMonthsTimestamps();
         const weekTimestamps = generateWeekTimestamps();
         const yearsTimestamps = generateYearsTimestamps();
+        const dayCurrent = await method(weekTimestamps);
+        const dayOffset = await method([
+            {
+                start: PREV_DAY,
+                end: Date.now(),
+            },
+        ]);
+        const monthCurrent = await method(monthsTimestamps);
+        const monthOffset = await method([
+            {
+                start: PREV_MONTH,
+                end: Date.now(),
+            },
+        ]);
+        const yearCurrent = await method(yearsTimestamps);
+        const yearOffset = await method([
+            {
+                start: PREV_YEAR,
+                end: Date.now(),
+            },
+        ]);
 
         return {
             day: {
-                current: await method(weekTimestamps),
-                offset: await method([
-                    {
-                        start: PREV_DAY,
-                        end: Date.now(),
-                    },
-                ]),
+                current: dayCurrent,
+                offset: dayOffset,
             },
             month: {
-                current: await method(monthsTimestamps),
-                offset: await method([
-                    {
-                        start: PREV_MONTH,
-                        end: Date.now(),
-                    },
-                ]),
+                current: monthCurrent,
+                offset: monthOffset,
             },
             year: {
-                current: await method(yearsTimestamps),
-                offset: await method([
-                    {
-                        start: PREV_YEAR,
-                        end: Date.now(),
-                    },
-                ]),
+                current: yearCurrent,
+                offset: yearOffset,
             },
         };
     }

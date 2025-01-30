@@ -104,36 +104,27 @@ export const generateWeekTimestamps = () => {
 };
 
 export const generateMonthsTimestamps = () => {
-    const monthsOfYear: any[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
     const today = new Date();
-    const currentMonth = today.getMonth();
-    const timestamps: any[] = [];
-    for (const month of monthsOfYear) {
-        const diffMonths = (currentMonth - month + 12) % 12;
-        if (diffMonths > 0) {
-            const currMonth = new Date(today);
-            currMonth.setMonth(today.getMonth() - diffMonths);
-            currMonth.setDate(1);
-            currMonth.setHours(0, 0, 0, 0);
-            const nextMonth = new Date(today);
-            nextMonth.setMonth(today.getMonth() - diffMonths + 1);
-            nextMonth.setDate(1);
-            nextMonth.setHours(0, 0, 0, 0);
-            timestamps.push({
-                start: currMonth.getTime(),
-                end: nextMonth.getTime(),
-            });
-        }
+    const timestamps: { start: number; end: number }[] = [];
+
+    for (let i = 11; i >= 0; i--) {
+        const start = new Date(today);
+        start.setMonth(today.getMonth() - i);
+        start.setDate(1);
+        start.setHours(0, 0, 0, 0);
+
+        const end = new Date(start);
+        end.setMonth(start.getMonth() + 1);
+
+        timestamps.push({
+            start: start.getTime(),
+            end: end.getTime(),
+        });
     }
-    const currMonth = new Date(today);
-    currMonth.setMonth(today.getMonth());
-    currMonth.setDate(1);
-    currMonth.setHours(0, 0, 0, 0);
-    timestamps.push({
-        start: currMonth.getTime(),
-        end: Date.now(),
-    });
-    return timestamps.sort((a, b) => a.end - b.end);
+
+    timestamps[timestamps.length - 1].end = Date.now();
+
+    return timestamps;
 };
 
 export const generateYearsTimestamps = () => {
