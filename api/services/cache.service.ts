@@ -54,6 +54,94 @@ class CacheService {
         };
     }
 
+    async cacheBurnedData() {
+        const burnedZanoTimestamps = [
+            PREV_HOUR,
+            PREV_DAY,
+            PREV_WEEK,
+            PREV_MONTH,
+            PREV_YEAR,
+            0,
+        ].map((start) => {
+            return {
+                start,
+                end: Date.now(),
+            };
+        });
+
+        const burnedZanoResult = await statsModel.getZanoBurned(
+            burnedZanoTimestamps
+        );
+
+        const [
+            burnedZanoHour,
+            burnedZanoDay,
+            burnedZanoWeek,
+            burnedZanoMonth,
+            burnedZanoYear,
+            burnedZanoAll,
+        ] = burnedZanoResult;
+
+        this.cache.zanoBured = {
+            hour: burnedZanoHour,
+            day: burnedZanoDay,
+            week: burnedZanoWeek,
+            month: burnedZanoMonth,
+            year: burnedZanoYear,
+            all: burnedZanoAll,
+        };
+
+    }
+
+    async cacheAvgNumOfTxsPerBlocks() {
+        this.cache.avgNumOfTxsPerBlocks =
+            await this.createCacheData(
+                statsModel.getAvgNumOfTxsPerBlock
+            );
+    }
+
+    async cacheAvgBlocksSize() {
+        this.cache.avgBlocksSize = await this.createCacheData(
+            statsModel.getAvgBlockSize
+        );
+    }
+
+    async cacheConfirmedTxs() {
+        this.cache.confirmedTxs = await this.createCacheData(
+            statsModel.getConfirmedTxs
+        );
+    }
+
+    async cacheZanoPrice() {
+        const zanoPriceResult = await getZanoPrice();
+
+        this.cache.zanoPrice = zanoPriceResult.zano;
+    }
+
+    async cacheAliases() {
+        const {
+            alias_count,
+            premium_alias_count,
+            matrix_alias_count,
+        } = await statsModel.getAliasesCount();
+
+        this.cache.aliasesCount = {
+            in_matrix: matrix_alias_count,
+            all: alias_count,
+            premium: premium_alias_count,
+        };
+    }
+
+    async cacheAssets() {
+        const { assets_count, whitelisted_assets_count } =
+            await statsModel.getAssetsCount();
+
+        this.cache.assetsCount = {
+            whitelisted: whitelisted_assets_count,
+            all: assets_count,
+        };
+    }
+
     init() {
         if (this.inited) return;
         this.inited = true;
@@ -61,78 +149,19 @@ class CacheService {
         (async () => {
             while (true) {
                 try {
-                    const burnedZanoTimestamps = [
-                        PREV_HOUR,
-                        PREV_DAY,
-                        PREV_WEEK,
-                        PREV_MONTH,
-                        PREV_YEAR,
-                        0,
-                    ].map((start) => {
-                        return {
-                            start,
-                            end: Date.now(),
-                        };
-                    });
 
-                    const burnedZanoResult = await statsModel.getZanoBurned(
-                        burnedZanoTimestamps
-                    );
 
-                    const [
-                        burnedZanoHour,
-                        burnedZanoDay,
-                        burnedZanoWeek,
-                        burnedZanoMonth,
-                        burnedZanoYear,
-                        burnedZanoAll,
-                    ] = burnedZanoResult;
+                    await Promise.allSettled([
+                        this.cacheBurnedData(),
+                        this.cacheAvgNumOfTxsPerBlocks(),
+                        this.cacheAvgBlocksSize(),
+                        this.cacheConfirmedTxs(),
+                        this.cacheZanoPrice(),
+                        this.cacheAliases(),
+                        this.cacheAssets(),
+                    ]);
 
-                    this.cache.zanoBured = {
-                        hour: burnedZanoHour,
-                        day: burnedZanoDay,
-                        week: burnedZanoWeek,
-                        month: burnedZanoMonth,
-                        year: burnedZanoYear,
-                        all: burnedZanoAll,
-                    };
 
-                    this.cache.avgNumOfTxsPerBlocks =
-                        await this.createCacheData(
-                            statsModel.getAvgNumOfTxsPerBlock
-                        );
-
-                    this.cache.avgBlocksSize = await this.createCacheData(
-                        statsModel.getAvgBlockSize
-                    );
-
-                    this.cache.confirmedTxs = await this.createCacheData(
-                        statsModel.getConfirmedTxs
-                    );
-
-                    const zanoPriceResult = await getZanoPrice();
-
-                    this.cache.zanoPrice = zanoPriceResult.zano;
-
-                    const {
-                        alias_count,
-                        premium_alias_count,
-                        matrix_alias_count,
-                    } = await statsModel.getAliasesCount();
-
-                    this.cache.aliasesCount = {
-                        in_matrix: matrix_alias_count,
-                        all: alias_count,
-                        premium: premium_alias_count,
-                    };
-
-                    const { assets_count, whitelisted_assets_count } =
-                        await statsModel.getAssetsCount();
-
-                    this.cache.assetsCount = {
-                        whitelisted: whitelisted_assets_count,
-                        all: assets_count,
-                    };
                 } catch (error) {
                     console.error(error);
                 }
