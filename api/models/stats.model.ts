@@ -120,33 +120,51 @@ class StatsModel {
     }
 
     async getAliasesCount() {
-        const stats = await getStats();
-        if (!stats) {
+        try {
+            const stats = await getStats();
+            if (!stats) throw new Error("Error at get stats");
+            const { alias_count, premium_alias_count, matrix_alias_count } =
+                stats;
+            return { alias_count, premium_alias_count, matrix_alias_count };
+        } catch (e) {
+            console.error(e);
             return {
                 alias_count: 0,
                 premium_alias_count: 0,
                 matrix_alias_count: 0,
             };
         }
-
-        const { alias_count, premium_alias_count, matrix_alias_count } = stats;
-
-        return { alias_count, premium_alias_count, matrix_alias_count };
     }
 
     async getAssetsCount() {
-        const stats = await getStats();
-        if (!stats) {
+        try {
+            const stats = await getStats();
+            if (!stats) {
+                throw new Error("Error at get stats");
+            }
+            const { assets_count, whitelisted_assets_count } = stats;
             return {
-                assets_count: 0,
-                whitelisted_assets_count: 0,
+                assets_count,
+                whitelisted_assets_count,
             };
+        } catch (e) {
+            console.error(e);
+            return { assets_count: 0, whitelisted_assets_count: 0 };
         }
-        const { assets_count, whitelisted_assets_count } = stats;
-        return {
-            assets_count,
-            whitelisted_assets_count,
-        };
+    }
+
+    async getStackingData() {
+        try {
+            const stats = await getStats();
+            if (!stats) {
+                throw new Error("Error at get stats");
+            }
+            const { stacked_coins, stacked_percentage, APY } = stats;
+            return { stacked_coins, stacked_percentage, APY };
+        } catch (e) {
+            console.error(e);
+            return { stacked_coins: 0, stacked_percentage: 0, APY: 0 };
+        }
     }
 }
 const statsModel = new StatsModel();
