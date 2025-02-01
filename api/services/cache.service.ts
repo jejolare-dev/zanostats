@@ -142,7 +142,6 @@ class CacheService {
     async cacheStackingData() {
         const stackingData = await statsModel.getStackingData();
         this.cache.stackingData = stackingData;
-        console.log(this.cache)
     }
 
     init() {
