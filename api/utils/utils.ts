@@ -76,31 +76,25 @@ export const generateWeekTimestamps = () => {
     const currentDay = today.getDay();
     const timestamps: any[] = [];
     for (const day of daysOfWeek) {
-        const diffDays = (currentDay - day + 7) % 7;
-        if (diffDays > 0) {
-            const currDay = new Date(today);
-            currDay.setDate(today.getDate() - diffDays);
-            currDay.setHours(0, 0, 0, 0);
-            const nextDay = new Date(today);
-            nextDay.setDate(today.getDate() - diffDays + 1);
-            nextDay.setHours(0, 0, 0, 0);
-            timestamps.push({
-                start: currDay.getTime(),
-                end: nextDay.getTime(),
-            });
-        }
-    }
-    const currDay = new Date(today);
-    currDay.setDate(today.getDate());
-    currDay.setHours(0, 0, 0, 0);
-    const lastHour = new Date(Date.now());
-    lastHour.setMinutes(0, 0, 0);
-    timestamps.push({
-        start: currDay.getTime(),
-        end: lastHour.getTime(),
-    });
+        const diffDays = (currentDay - day + 7) % 7; 
 
-    return timestamps.sort((a, b) => a.end - b.end);
+        const currDay = new Date(today);
+        currDay.setDate(today.getDate() - diffDays); 
+        currDay.setHours(0, 0, 0, 0); 
+
+        const nextDay = new Date(currDay); 
+        nextDay.setDate(currDay.getDate() + 1); 
+        nextDay.setHours(0, 0, 0, 0);
+
+        timestamps.push({
+            start: currDay.getTime(),
+            end: nextDay.getTime() > Date.now() ? Date.now() : nextDay.getTime() ,
+        });
+    }
+
+    const result = timestamps.sort((a, b) => a.end - b.end);
+
+    return result;
 };
 
 export const generateMonthsTimestamps = () => {
@@ -108,13 +102,13 @@ export const generateMonthsTimestamps = () => {
     const timestamps: { start: number; end: number }[] = [];
 
     for (let i = 11; i >= 0; i--) {
-        const start = new Date(today);
-        start.setMonth(today.getMonth() - i);
-        start.setDate(1);
+        const start = new Date();
+        start.setMonth(today.getMonth() - i, 1);
         start.setHours(0, 0, 0, 0);
 
         const end = new Date(start);
-        end.setMonth(start.getMonth() + 1);
+        end.setMonth(end.getMonth() + 1, 1);
+        end.setHours(0, 0, 0, 0);
 
         timestamps.push({
             start: start.getTime(),
@@ -123,8 +117,10 @@ export const generateMonthsTimestamps = () => {
     }
 
     timestamps[timestamps.length - 1].end = Date.now();
+    const result = timestamps.sort((a, b) => a.end - b.end);
 
-    return timestamps;
+
+    return result;
 };
 
 export const generateYearsTimestamps = () => {
@@ -141,9 +137,13 @@ export const generateYearsTimestamps = () => {
             end: nextYearDate.getTime(),
         });
     }
+
     timestamps.push({
         start: new Date(currentYear, 0, 1).getTime(),
         end: Date.now(),
     });
-    return timestamps.sort((a, b) => a.end - b.end);
+
+    const result = timestamps.sort((a, b) => a.end - b.end);
+
+    return result;
 };
