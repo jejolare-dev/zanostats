@@ -37,7 +37,7 @@ class CacheService {
         };
         aliasesCount: Record<string, number>;
         assetsCount: Record<string, number>;
-        stackingData: Record<string, number>;
+        stakingData: Record<string, number>;
     };
 
     constructor() {
@@ -52,7 +52,7 @@ class CacheService {
             },
             aliasesCount: {},
             assetsCount: {},
-            stackingData: {},
+            stakingData: {},
         };
     }
 
@@ -139,9 +139,9 @@ class CacheService {
         };
     }
 
-    async cacheStackingData() {
-        const stackingData = await statsModel.getStackingData();
-        this.cache.stackingData = stackingData;
+    async cacheStakingData() {
+        const stakingData = await statsModel.getStakingData();
+        this.cache.stakingData = stakingData;
     }
 
     init() {
@@ -159,7 +159,7 @@ class CacheService {
                         this.cacheZanoPrice(),
                         this.cacheAliases(),
                         this.cacheAssets(),
-                        this.cacheStackingData(),
+                        this.cacheStakingData(),
                     ]);
                 } catch (error) {
                     console.error(error);

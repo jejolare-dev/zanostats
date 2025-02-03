@@ -15,7 +15,7 @@ import {
     getInfo,
     getMatrixAdressesCount,
     getPremiumAliasesCount,
-    getStackingInfo,
+    getStakingInfo,
     getStats,
     // getTxDetails,
     updateDbHeight,
@@ -98,15 +98,15 @@ export async function syncStats() {
         const assets_count = await getAssetsCount();
         const matrix_alias_count = await getMatrixAdressesCount();
         const premium_alias_count = await getPremiumAliasesCount();
-        const { stacked_coins, stacked_percentage, APY } =
-            await getStackingInfo();
+        const { staked_coins, staked_percentage, APY } =
+            await getStakingInfo();
         await stats.update({
             alias_count,
             assets_count,
             matrix_alias_count,
             premium_alias_count,
-            stacked_coins,
-            stacked_percentage,
+            staked_coins,
+            staked_percentage,
             APY,
         });
     } catch (e: any) {

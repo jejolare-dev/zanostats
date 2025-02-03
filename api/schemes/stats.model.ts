@@ -9,9 +9,9 @@ class Stats extends Model {
     declare matrix_alias_count: number;
     declare whitelisted_assets_count: number;
     declare premium_alias_count: number;
-    declare stacked_coins: number;
+    declare staked_coins: number;
     declare APY: number;
-    declare stacked_percentage: number;
+    declare staked_percentage: number;
 }
 
 Stats.init(
@@ -52,7 +52,7 @@ Stats.init(
             allowNull: false,
             defaultValue: 1,
         },
-        stacked_coins: {
+        staked_coins: {
             type: DataTypes.STRING,
             allowNull: false,
             defaultValue: "0",
@@ -62,7 +62,7 @@ Stats.init(
             allowNull: false,
             defaultValue: "0",
         },
-        stacked_percentage: {
+        staked_percentage: {
             type: DataTypes.STRING,
             allowNull: false,
             defaultValue: "0",

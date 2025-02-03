@@ -173,11 +173,11 @@ export async function getZanoPrice() {
     }
 }
 
-export async function getStackingInfo() {
+export async function getStakingInfo() {
     const result = {
-        stacked_coins: 0,
+        staked_coins: 0,
         APY: 0,
-        stacked_percentage: 0,
+        staked_percentage: 0,
     };
 
     try {
@@ -195,16 +195,16 @@ export async function getStackingInfo() {
             .mul(100)
             .toNumber();
 
-        result.stacked_percentage = parseFloat(stakedPercentage.toFixed(2));
+        result.staked_percentage = parseFloat(stakedPercentage.toFixed(2));
 
-        result.stacked_coins = new Decimal(info.result.total_coins)
+        result.staked_coins = new Decimal(info.result.total_coins)
             .dividedBy(100)
-            .mul(new Decimal(result.stacked_percentage))
+            .mul(new Decimal(result.staked_percentage))
             .dividedBy(new Decimal(10 ** 12))
             .toNumber();
 
         result.APY = new Decimal(720 * 365)
-            .dividedBy(new Decimal(result.stacked_coins))
+            .dividedBy(new Decimal(result.staked_coins))
             .mul(100)
             .toNumber()
         

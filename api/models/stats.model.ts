@@ -153,17 +153,17 @@ class StatsModel {
         }
     }
 
-    async getStackingData() {
+    async getStakingData() {
         try {
             const stats = await getStats();
             if (!stats) {
                 throw new Error("Error at get stats");
             }
-            const { stacked_coins, stacked_percentage, APY } = stats;
-            return { stacked_coins, stacked_percentage, APY };
+            const { staked_coins, staked_percentage, APY } = stats;
+            return { staked_coins, staked_percentage, APY };
         } catch (e) {
             console.error(e);
-            return { stacked_coins: 0, stacked_percentage: 0, APY: 0 };
+            return { staked_coins: 0, staked_percentage: 0, APY: 0 };
         }
     }
 }
