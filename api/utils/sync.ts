@@ -15,13 +15,19 @@ import {
     getInfo,
     getMatrixAdressesCount,
     getPremiumAliasesCount,
+    getStackingInfo,
     getStats,
     // getTxDetails,
     updateDbHeight,
 } from "./methods";
 
-export async function init() {
-    const stats = await getStats();
+export async function initApp() {
+    const stats = await Stats.findOne({
+        where: {
+            id: 1,
+        },
+    });
+
     if (!stats) {
         try {
             await Stats.create();
@@ -85,16 +91,23 @@ export async function syncStats() {
     try {
         const info = await getInfo();
         const stats = await getStats();
+        if (!stats) {
+            throw new Error("Error at sync stats");
+        }
         const { alias_count } = info?.result;
         const assets_count = await getAssetsCount();
         const matrix_alias_count = await getMatrixAdressesCount();
         const premium_alias_count = await getPremiumAliasesCount();
-
-        await stats!.update({
+        const { stacked_coins, stacked_percentage, APY } =
+            await getStackingInfo();
+        await stats.update({
             alias_count,
             assets_count,
             matrix_alias_count,
             premium_alias_count,
+            stacked_coins,
+            stacked_percentage,
+            APY,
         });
     } catch (e: any) {
         logger.error(e);

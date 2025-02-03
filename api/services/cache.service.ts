@@ -37,6 +37,7 @@ class CacheService {
         };
         aliasesCount: Record<string, number>;
         assetsCount: Record<string, number>;
+        stackingData: Record<string, number>;
     };
 
     constructor() {
@@ -51,6 +52,7 @@ class CacheService {
             },
             aliasesCount: {},
             assetsCount: {},
+            stackingData: {},
         };
     }
 
@@ -90,14 +92,12 @@ class CacheService {
             year: burnedZanoYear,
             all: burnedZanoAll,
         };
-
     }
 
     async cacheAvgNumOfTxsPerBlocks() {
-        this.cache.avgNumOfTxsPerBlocks =
-            await this.createCacheData(
-                statsModel.getAvgNumOfTxsPerBlock
-            );
+        this.cache.avgNumOfTxsPerBlocks = await this.createCacheData(
+            statsModel.getAvgNumOfTxsPerBlock
+        );
     }
 
     async cacheAvgBlocksSize() {
@@ -119,11 +119,8 @@ class CacheService {
     }
 
     async cacheAliases() {
-        const {
-            alias_count,
-            premium_alias_count,
-            matrix_alias_count,
-        } = await statsModel.getAliasesCount();
+        const { alias_count, premium_alias_count, matrix_alias_count } =
+            await statsModel.getAliasesCount();
 
         this.cache.aliasesCount = {
             in_matrix: matrix_alias_count,
@@ -142,6 +139,11 @@ class CacheService {
         };
     }
 
+    async cacheStackingData() {
+        const stackingData = await statsModel.getStackingData();
+        this.cache.stackingData = stackingData;
+    }
+
     init() {
         if (this.inited) return;
         this.inited = true;
@@ -149,8 +151,6 @@ class CacheService {
         (async () => {
             while (true) {
                 try {
-
-
                     await Promise.allSettled([
                         this.cacheBurnedData(),
                         this.cacheAvgNumOfTxsPerBlocks(),
@@ -159,9 +159,8 @@ class CacheService {
                         this.cacheZanoPrice(),
                         this.cacheAliases(),
                         this.cacheAssets(),
+                        this.cacheStackingData(),
                     ]);
-
-
                 } catch (error) {
                     console.error(error);
                 }

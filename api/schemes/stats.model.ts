@@ -9,6 +9,9 @@ class Stats extends Model {
     declare matrix_alias_count: number;
     declare whitelisted_assets_count: number;
     declare premium_alias_count: number;
+    declare stacked_coins: number;
+    declare APY: number;
+    declare stacked_percentage: number;
 }
 
 Stats.init(
@@ -48,6 +51,21 @@ Stats.init(
             type: DataTypes.INTEGER,
             allowNull: false,
             defaultValue: 1,
+        },
+        stacked_coins: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            defaultValue: "0",
+        },
+        APY: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            defaultValue: "0",
+        },
+        stacked_percentage: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            defaultValue: "0",
         },
     },
     { sequelize, modelName: "stats" }

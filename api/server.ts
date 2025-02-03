@@ -4,7 +4,7 @@ import logger from "@/api/logger";
 import sequelize from "@/api/sequelize";
 import initdb from "@/api/database";
 import { statsRoute } from "./routes/stats.route";
-import { init, syncBlocks, syncStats } from "./utils/sync";
+import { initApp, syncBlocks, syncStats } from "./utils/sync";
 import cors from "cors";
 import cacheService from "./services/cache.service";
 
@@ -35,13 +35,13 @@ process.on("unhandledRejection", (reason, promise) => {
     await initdb();
     await sequelize.authenticate();
     await sequelize.sync();
+    await initApp();
     cacheService.init();
     app.use(cors());
 
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 
-    await init();
 
     app.use("/api", [statsRoute]);
 

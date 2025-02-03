@@ -1,5 +1,6 @@
 import axios from "axios";
 import Stats from "../schemes/stats.model";
+import Decimal from "decimal.js";
 
 const zanoURL = process.env.ZANOD_URL || "http://37.27.100.59:10500/json_rpc";
 
@@ -123,9 +124,13 @@ export async function getStats() {
                 id: 1,
             },
         });
+
+        if (!stats) throw new Error("Error at get stats");
+        
         return stats;
     } catch (e) {
         console.error(e);
+        return null;
     }
 }
 
@@ -166,4 +171,45 @@ export async function getZanoPrice() {
     } catch (e) {
         console.error(e);
     }
+}
+
+export async function getStackingInfo() {
+    const result = {
+        stacked_coins: 0,
+        APY: 0,
+        stacked_percentage: 0,
+    };
+
+    try {
+        const info = await getInfo();
+
+        const pos_diff_to_total_ratio = new Decimal(
+            info.result.pos_difficulty
+        ).dividedBy(new Decimal(info.result.total_coins));
+
+        const divider = new Decimal(176.363);
+
+        const stakedPercentage = new Decimal(0.55)
+            .mul(pos_diff_to_total_ratio)
+            .dividedBy(divider)
+            .mul(100)
+            .toNumber();
+
+        result.stacked_percentage = parseFloat(stakedPercentage.toFixed(2));
+
+        result.stacked_coins = new Decimal(info.result.total_coins)
+            .dividedBy(100)
+            .mul(new Decimal(result.stacked_percentage))
+            .dividedBy(new Decimal(10 ** 12))
+            .toNumber();
+
+        result.APY = new Decimal(720 * 365)
+            .dividedBy(new Decimal(result.stacked_coins))
+            .mul(100)
+            .toNumber()
+        
+    } catch (error) {
+        console.error(error);
+    }
+    return result;
 }
