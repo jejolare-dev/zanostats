@@ -16,6 +16,8 @@ class StatsModel {
     async getZanoBurned(data: InputData) {
         return await Promise.all(
             data.map(async (timestamp: { start: number; end: number }) => {
+                console.log(`GETTING ZANO BURNED for ${timestamp.start} to ${timestamp.end}`);
+                
                 const { start, end } = timestamp;
                 const blocks = await Block.findAll({
                     where: {
@@ -35,6 +37,9 @@ class StatsModel {
                         totalFee.plus(new Decimal(Number(block.total_fee))),
                     new Decimal(0)
                 );
+
+                console.log(`BURNED ZANO: ${burnedZanoBig.toNumber()} for start: ${start} and end: ${end}`);
+                
 
                 return burnedZanoBig
                     .dividedBy(new Decimal(10).pow(12))
