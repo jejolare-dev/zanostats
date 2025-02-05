@@ -58,11 +58,11 @@ class CacheService {
 
     async cacheBurnedData() {
         const burnedZanoTimestamps = [
-            PREV_HOUR,
-            PREV_DAY,
-            PREV_WEEK,
-            PREV_MONTH,
-            PREV_YEAR,
+            PREV_HOUR(),
+            PREV_DAY(),
+            PREV_WEEK(),
+            PREV_MONTH(),
+            PREV_YEAR(),
             0,
         ].map((start) => {
             return {
@@ -181,21 +181,21 @@ class CacheService {
         const dayCurrent = await method(weekTimestamps);
         const dayOffset = await method([
             {
-                start: PREV_DAY,
+                start: PREV_DAY(),
                 end: Date.now(),
             },
         ]);
         const monthCurrent = await method(monthsTimestamps);
         const monthOffset = await method([
             {
-                start: PREV_MONTH,
+                start: PREV_MONTH(),
                 end: Date.now(),
             },
         ]);
         const yearCurrent = await method(yearsTimestamps);
         const yearOffset = await method([
             {
-                start: PREV_YEAR,
+                start: PREV_YEAR(),
                 end: Date.now(),
             },
         ]);
