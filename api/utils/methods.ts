@@ -119,11 +119,7 @@ export async function getBlocksDetails(fromHeight: number, count: number) {
 
 export async function getStats() {
     try {
-        const stats = await Stats.findOne({
-            where: {
-                id: 1,
-            },
-        });
+        const stats = await Stats.findOne();
 
         if (!stats) throw new Error("Error at get stats");
         

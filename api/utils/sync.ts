@@ -22,20 +22,13 @@ import {
 } from "./methods";
 
 export async function initApp() {
-    const stats = await Stats.findOne({
-        where: {
-            id: 1,
-        },
-    });
-
-    if (!stats) {
-        try {
-            await Stats.create();
-            const firstBlocks = await getBlocksDetails(0, 100);
-            await saveBlocksAndTxs(firstBlocks);
-        } catch (e) {
-            logger.error(`error at init db : ${e}`);
-        }
+    try {
+        await Stats.destroy();
+        await Stats.create();
+        const firstBlocks = await getBlocksDetails(0, 100);
+        await saveBlocksAndTxs(firstBlocks);
+    } catch (e) {
+        logger.error(`error at init db : ${e}`);
     }
 }
 
