@@ -39,6 +39,11 @@ Transaction.init(
         sequelize,
         modelName: "transactions",
         timestamps: false,
+        indexes: [
+            {
+                fields: ["timestamp"],
+            }
+        ]
     }
 );
 

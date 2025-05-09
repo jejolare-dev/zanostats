@@ -70,6 +70,11 @@ Block.init(
         sequelize,
         modelName: "blocks",
         timestamps: false,
+        indexes: [
+            {
+                fields: ["timestamp"],
+            }
+        ]
     }
 );
 
