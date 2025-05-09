@@ -23,7 +23,7 @@ import {
 
 export async function initApp() {
     try {
-        await Stats.destroy();
+        await Stats.destroy({ where: {} });
         await Stats.create();
         const firstBlocks = await getBlocksDetails(0, 100);
         await saveBlocksAndTxs(firstBlocks);
