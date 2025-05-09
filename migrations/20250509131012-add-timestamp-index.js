@@ -2,7 +2,7 @@
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  up: async (queryInterface, Sequelize) => {
+  async up(queryInterface, Sequelize) {
     await queryInterface.addIndex('transactions', ['timestamp'], {
       name: 'idx_transactions_timestamp'
     });
@@ -11,7 +11,7 @@ module.exports = {
     });
   },
 
-  down: async (queryInterface, Sequelize) => {
+  async down(queryInterface, Sequelize) {
     await queryInterface.removeIndex('transactions', 'idx_transactions_timestamp');
     await queryInterface.removeIndex('blocks', 'idx_blocks_timestamp');
   }
