@@ -164,6 +164,10 @@ class StatsModel {
             if (!stats) {
                 throw new Error("Error at get stats");
             }
+
+            console.log("STATS (Get staking)", stats);
+            
+
             const { staked_coins, staked_percentage, APY } = stats;
             return { staked_coins, staked_percentage, APY };
         } catch (e) {

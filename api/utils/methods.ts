@@ -170,8 +170,6 @@ export async function getStakingInfo() {
 
     try {
         const info = await getInfo();
-        console.log(info);
-        
 
         const pos_diff_to_total_ratio = new Decimal(
             info.result.pos_difficulty
