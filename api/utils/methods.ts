@@ -75,11 +75,7 @@ export async function getBlockchainHeight() {
 
 export async function getDbHeight() {
     try {
-        const stats = await Stats.findOne({
-            where: {
-                id: 1,
-            },
-        });
+        const stats = await Stats.findOne();
         return stats?.db_height as any;
     } catch (e) {
         console.error(e);
@@ -88,11 +84,7 @@ export async function getDbHeight() {
 
 export async function updateDbHeight(newHeight: number) {
     try {
-        const stats = await Stats.findOne({
-            where: {
-                id: 1,
-            },
-        });
+        const stats = await Stats.findOne();
         await stats?.update({ db_height: newHeight });
     } catch (e) {
         console.error(e);
