@@ -93,6 +93,17 @@ export async function syncStats() {
         const premium_alias_count = await getPremiumAliasesCount();
         const { staked_coins, staked_percentage, APY } =
             await getStakingInfo();
+
+        console.log('STATS (Sync)', {
+            alias_count,
+            assets_count,
+            matrix_alias_count,
+            premium_alias_count,
+            staked_coins,
+            staked_percentage,
+            APY,
+        });
+        
         await stats.update({
             alias_count,
             assets_count,
