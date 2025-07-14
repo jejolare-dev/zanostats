@@ -3,7 +3,7 @@ import Block from "../schemes/block.model";
 import Transaction from "../schemes/transaction.model";
 
 import Decimal from "decimal.js";
-import { getDbHeight, getStats } from "../utils/methods";
+import { getBlockchainHeight, getStats } from "../utils/methods";
 
 interface InputDataItem {
     start: number;
@@ -70,7 +70,7 @@ class StatsModel {
     }
 
     async getAvgBlockSize(data: InputData) {
-        const blocksCount = await getDbHeight();
+        // const blocksCount = await getDbHeight();
         return await Promise.all(
             data.map(async (timestamp: { start: number; end: number }) => {
                 const { start, end } = timestamp;
@@ -99,7 +99,7 @@ class StatsModel {
     }
 
     async getConfirmedTxs(data: InputData) {
-        const height = await getDbHeight();
+        const height = parseInt(await getBlockchainHeight(), 10);
         return await Promise.all(
             data.map(async (timestamp: { start: number; end: number }) => {
                 const { start, end } = timestamp;

@@ -65,7 +65,7 @@ export async function getAssetsCount() {
 export async function getBlockchainHeight() {
     try {
         const result: any = await axios.post(
-            `http://37.27.100.59:10500/getheight`,
+            `${zanoURL.replace('/json_rpc', '')}/getheight`,
             {}
         );
         return result.data.height;
