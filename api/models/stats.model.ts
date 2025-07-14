@@ -15,9 +15,7 @@ type InputData = InputDataItem[];
 class StatsModel {
     async getZanoBurned(data: InputData) {
         return await Promise.all(
-            data.map(async (timestamp: { start: number; end: number }) => {
-                console.log(`GETTING ZANO BURNED for ${timestamp.start} to ${timestamp.end}`);
-                
+            data.map(async (timestamp: { start: number; end: number }) => {    
                 const { start, end } = timestamp;
                 const blocks = await Block.findAll({
                     where: {
@@ -38,8 +36,6 @@ class StatsModel {
                     new Decimal(0)
                 );
 
-                console.log(`BURNED ZANO: ${burnedZanoBig.toNumber()} for start: ${start} and end: ${end}`);
-                
 
                 return burnedZanoBig
                     .dividedBy(new Decimal(10).pow(12))
@@ -164,8 +160,6 @@ class StatsModel {
             if (!stats) {
                 throw new Error("Error at get stats");
             }
-
-            console.log("STATS (Get staking)", stats);
             
 
             const { staked_coins, staked_percentage, APY } = stats;

@@ -23,8 +23,16 @@ import {
 
 export async function initApp() {
     try {
-        await Stats.destroy({ where: {} });
+
+        const statsExists = await Stats.findOne();
+
+        if (statsExists) {
+            logger.info("Stats already exists, skipping initialization");
+            return;
+        }
+
         await Stats.create();
+
         const firstBlocks = await getBlocksDetails(0, 100);
         await saveBlocksAndTxs(firstBlocks);
     } catch (e) {
@@ -52,6 +60,8 @@ export async function syncBlocks() {
             }).filter(Boolean);
 
             const blocksPack = await Promise.all(blockPromises);
+            logger.info("Got blocks details")
+
             const blocks = blocksPack.flat(Infinity);
 
             await saveBlocksAndTxs(blocks);
@@ -94,16 +104,6 @@ export async function syncStats() {
         const { staked_coins, staked_percentage, APY } =
             await getStakingInfo();
 
-        console.log('STATS (Sync)', {
-            alias_count,
-            assets_count,
-            matrix_alias_count,
-            premium_alias_count,
-            staked_coins,
-            staked_percentage,
-            APY,
-        });
-        
         await stats.update({
             alias_count,
             assets_count,

@@ -1,6 +1,7 @@
 import axios from "axios";
 import Stats from "../schemes/stats.model";
 import Decimal from "decimal.js";
+import logger from "../logger";
 
 const zanoURL = process.env.ZANOD_URL || "http://37.27.100.59:10500/json_rpc";
 
@@ -85,7 +86,10 @@ export async function getDbHeight() {
 export async function updateDbHeight(newHeight: number) {
     try {
         const stats = await Stats.findOne();
+        logger.info(`Updating DB height to ${newHeight} with current height ${stats?.db_height}`);
+        
         await stats?.update({ db_height: newHeight });
+        await stats?.save();
     } catch (e) {
         console.error(e);
     }
