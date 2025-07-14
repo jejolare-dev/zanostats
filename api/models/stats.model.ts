@@ -97,7 +97,7 @@ class StatsModel {
                     new Decimal(0)
                 );
 
-                return allBlocksSize.dividedBy(blocksCount).toNumber();
+                return allBlocksSize.dividedBy(blocks.length).toNumber();
             })
         );
     }
