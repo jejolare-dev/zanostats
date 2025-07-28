@@ -12,33 +12,12 @@ import {
     PREV_WEEK,
     PREV_YEAR,
 } from "@/api/constants";
-
-type CacheDataWithOffset<T> = {
-    current: T;
-    offset: T;
-};
-
-type TimePeriodCacheData<T> = {
-    year: CacheDataWithOffset<T>;
-    day: CacheDataWithOffset<T>;
-    month: CacheDataWithOffset<T>;
-};
+import tradeModel from "../models/trade.model";
+import { ICache } from "../types/types";
 
 class CacheService {
     private inited: boolean = false;
-    private cache: {
-        zanoBured: Record<string, number>;
-        avgNumOfTxsPerBlocks: TimePeriodCacheData<number[]> | {};
-        avgBlocksSize: TimePeriodCacheData<number[]> | {};
-        confirmedTxs: TimePeriodCacheData<number[]> | {};
-        zanoPrice: {
-            usd: number;
-            usd_24h_change: number;
-        };
-        aliasesCount: Record<string, number>;
-        assetsCount: Record<string, number>;
-        stakingData: Record<string, number>;
-    };
+    private cache: ICache;
 
     constructor() {
         this.cache = {
@@ -53,6 +32,42 @@ class CacheService {
             aliasesCount: {},
             assetsCount: {},
             stakingData: {},
+            tradeStats: {
+                assets: [],
+                general: {
+                    largest_tvl: {
+                        asset_id: "",
+                        tvl: "0",
+                    },
+                    total_tvl: "0",
+                    period_data: {
+                        day: {
+                            active_tokens: "0",
+                            total_volume: "0",
+                            most_traded: {
+                                asset_id: "",
+                                volume: "0",
+                            },
+                        },
+                        month: {
+                            active_tokens: "0",
+                            total_volume: "0",
+                            most_traded: {
+                                asset_id: "",
+                                volume: "0",
+                            },
+                        },
+                        year: {
+                            active_tokens: "0",
+                            total_volume: "0",
+                            most_traded: {
+                                asset_id: "",
+                                volume: "0",
+                            },
+                        },
+                    },
+                }
+            }
         };
     }
 
@@ -144,6 +159,18 @@ class CacheService {
         this.cache.stakingData = stakingData;
     }
 
+    async cacheTradeStats() {
+        const tokensData = await tradeModel.getTradeTokensData();
+        this.cache.tradeStats.assets = tokensData;
+        const generalData = await tradeModel.getTradeGeneralData();
+
+        if (!generalData) {
+            throw new Error("Failed to fetch trade general data");
+        } 
+
+        this.cache.tradeStats.general = generalData;
+    }
+
     init() {
         if (this.inited) return;
         this.inited = true;
@@ -152,6 +179,7 @@ class CacheService {
             while (true) {
                 try {
                     await Promise.allSettled([
+                        this.cacheTradeStats(),
                         this.cacheBurnedData(),
                         this.cacheAvgNumOfTxsPerBlocks(),
                         this.cacheAvgBlocksSize(),

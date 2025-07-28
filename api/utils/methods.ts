@@ -2,6 +2,7 @@ import axios from "axios";
 import Stats from "../schemes/stats.model";
 import Decimal from "decimal.js";
 import logger from "../logger";
+import { TradeAssetStats, TradeAssetStatsResponse, TradeGeneralStats, TradeGeneralStatsResponse } from "../types/api";
 
 const zanoURL = process.env.ZANOD_URL || "http://37.27.100.59:10500/json_rpc";
 
@@ -137,6 +138,51 @@ export async function getMatrixAdressesCount() {
     } catch (e) {
         console.error(e);
     }
+}
+
+export async function fetchTradeAssetData(queryParams: Record<string, any> = {}) {
+    try {
+        const tradeApiUrl = process.env.TRADE_API_URL;
+        
+        if (!tradeApiUrl) {
+            throw new Error("TRADE_API_URL is not defined in environment variables");
+        }
+
+        const result = await axios.get(`${tradeApiUrl}/stats/asset`, {
+            params: queryParams,
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        return (result?.data as TradeAssetStatsResponse).data as TradeAssetStats;
+
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+export async function  fetchTradeGeneralData(queryParams: Record<string, any> = {}) {
+    try {
+        const tradeApiUrl = process.env.TRADE_API_URL;
+        
+        if (!tradeApiUrl) {
+            throw new Error("TRADE_API_URL is not defined in environment variables");
+        }
+
+        const result = await axios.get(`${tradeApiUrl}/stats/total`, {
+            params: queryParams,
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        return (result?.data as TradeGeneralStatsResponse).data as TradeGeneralStats;
+
+    } catch (e) {
+        console.error(e);
+    }
+    
 }
 
 export async function getPremiumAliasesCount() {
