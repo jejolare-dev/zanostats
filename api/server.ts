@@ -7,6 +7,7 @@ import { statsRoute } from "./routes/stats.route";
 import { initApp, syncBlocks, syncStats } from "./utils/sync";
 import cors from "cors";
 import cacheService from "./services/cache.service";
+import { assetRoute } from "./routes/asset.route";
 
 if (!process.env.JWT_SECRET) {
     throw new Error("JWT_SECRET is not provided at .env file");
@@ -43,7 +44,7 @@ process.on("unhandledRejection", (reason, promise) => {
     app.use(express.urlencoded({ extended: true }));
 
 
-    app.use("/api", [statsRoute]);
+    app.use("/api", [statsRoute, assetRoute]);
 
     app.listen(PORT, () => {
         logger.info(`Server is running on http://localhost:${PORT}`);

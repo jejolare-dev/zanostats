@@ -35,7 +35,7 @@ class TradeModel {
             });
 
             if (!tokenDataDay || !tokenDataMonth || !tokenDataYear) {
-                console.error(`Failed to fetch data for token: ${targetToken.name}`);
+                console.error(`Failed to fetch data for token`);
                 continue;
             }
 
@@ -43,9 +43,10 @@ class TradeModel {
                 asset_id: targetToken.asset_id,
                 tvl: tokenDataDay.current_tvl,
                 price: tokenDataDay.current_price,
-                name: targetToken.name,
+                name: tokenDataDay.name,
                 type: targetToken.type,
                 market_cap: tokenDataDay.market_cap,
+                ticker: tokenDataDay.ticker,
                 periodData: {
                     day: {
                         change: tokenDataDay.period_data.price_change_percent,
@@ -89,7 +90,7 @@ class TradeModel {
         return {
             largest_tvl: {
                 asset_id: generalDataDay.largest_tvl.asset_id,
-                tvl: generalDataDay.largest_tvl.tvl
+                tvl: generalDataDay.largest_tvl.tvl,
             },
             total_tvl: generalDataDay.total_tvl,
 
