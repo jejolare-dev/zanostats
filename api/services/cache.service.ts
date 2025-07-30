@@ -41,7 +41,7 @@ class CacheService {
                     },
                     total_tvl: "0",
                     period_data: {
-                        day: {
+                        week: {
                             active_tokens: "0",
                             total_volume: "0",
                             most_traded: {

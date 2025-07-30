@@ -11,6 +11,12 @@ export type TimePeriodCacheData<T> = {
 
 export type TimePeriods<T> = {
     year: T;
+    week: T;
+    month: T;
+}
+
+export type AssetTimePeriods<T> = {
+    year: T;
     day: T;
     month: T;
 }
@@ -37,7 +43,7 @@ export interface ICache {
             type: string;
             market_cap: string;
 
-            periodData: TimePeriods<{
+            periodData: AssetTimePeriods<{
                 change: string;
                 volume: string;
             }>
