@@ -68,8 +68,8 @@ class TradeModel {
     }
 
     async getTradeGeneralData() {
-        const generalDataDay = await fetchTradeGeneralData({
-            from_timestamp: +new Date().getTime() - 24 * 60 * 60 * 1000,
+        const generalDataWeek = await fetchTradeGeneralData({
+            from_timestamp: +new Date().getTime() - 7 * 24 * 60 * 60 * 1000,
             to_timestamp: +new Date().getTime(),
         });
 
@@ -83,19 +83,19 @@ class TradeModel {
             to_timestamp: +new Date().getTime(),
         });
 
-        if (!generalDataDay || !generalDataMonth || !generalDataYear) {
+        if (!generalDataWeek || !generalDataMonth || !generalDataYear) {
             throw new Error("Failed to fetch trade general data");
         }
 
         return {
             largest_tvl: {
-                asset_id: generalDataDay.largest_tvl.asset_id,
-                tvl: generalDataDay.largest_tvl.tvl,
+                asset_id: generalDataWeek.largest_tvl.asset_id,
+                tvl: generalDataWeek.largest_tvl.tvl,
             },
-            total_tvl: generalDataDay.total_tvl,
+            total_tvl: generalDataWeek.total_tvl,
 
             period_data: {
-                day: generalDataDay.period_data,
+                week: generalDataWeek.period_data,
                 month: generalDataMonth.period_data,
                 year: generalDataYear.period_data
             }
