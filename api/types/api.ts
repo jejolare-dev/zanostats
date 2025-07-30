@@ -1,4 +1,6 @@
 export interface TradeAssetStats {
+    name: string;
+    ticker: string;
     current_tvl: string;
     current_price: string;
     change_24h_percent: string;
@@ -19,6 +21,7 @@ export interface TradeGeneralStats {
     largest_tvl: {
         asset_id: string;
         tvl: string;
+        ticker: string;
     };
     total_tvl: string;
     period_data: {

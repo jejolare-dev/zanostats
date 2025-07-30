@@ -33,6 +33,7 @@ export interface ICache {
             tvl: string;
             price: string;
             name: string;
+            ticker: string;
             type: string;
             market_cap: string;
 
