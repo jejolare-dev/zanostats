@@ -2,7 +2,7 @@ import Decimal from "decimal.js";
 import { tokensWhitelist } from "../constants/config";
 import { ICache } from "../types/types";
 import { fetchTradeAssetData, fetchTradeGeneralData } from "../utils/methods";
-import { fetchCoinGeckoStats, fetchZanoMexcData } from "../utils/mexc";
+import { fetchZanoMexcData } from "../utils/mexc";
 
 interface InputDataItem {
     start: number;
@@ -26,17 +26,18 @@ class TradeModel {
             throw new Error("Failed to fetch Zano data from MEXC");
         }
 
-        const cgeckoData = await fetchCoinGeckoStats();
 
-        if (!cgeckoData) {
-            throw new Error("Failed to fetch CoinGecko data");
+        const totalCoins = await fetch('https://explorer.zano.org/api/get_total_coins').then(res => res.text());
+        
+        if (!parseInt(totalCoins)) {
+            throw new Error("Failed to fetch total coins from Zano explorer");
         }
 
         // We need data in Zano (not USD) as frontend expects it for all other assets
-        const Tvl = new Decimal(cgeckoData.mcap)
-            .div(cgeckoData.price)
+        const Tvl = totalCoins;
 
         const MC = Tvl;
+        
 
         results.push({
             asset_id: "ZANO",
@@ -46,6 +47,7 @@ class TradeModel {
             type: "Native coin",
             market_cap: MC.toString(),
             ticker: "ZANO",
+            current_supply: "0",
             periodData: {
                 day: {
                     change: zanoDataDay.changePercent?.toString() || "0",
