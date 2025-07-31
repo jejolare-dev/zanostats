@@ -22,7 +22,6 @@ export interface TradeGeneralStats {
     largest_tvl: {
         asset_id: string;
         tvl: string;
-        ticker: string;
     };
     total_tvl: string;
     period_data: {
