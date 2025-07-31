@@ -94,6 +94,7 @@ class TradeModel {
                 name: tokenDataDay.name,
                 type: targetToken.type,
                 market_cap: tokenDataDay.market_cap,
+                current_supply: tokenDataDay.current_supply,
                 ticker: tokenDataDay.ticker,
                 periodData: {
                     day: {

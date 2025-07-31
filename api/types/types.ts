@@ -42,6 +42,7 @@ export interface ICache {
             ticker: string;
             type: string;
             market_cap: string;
+            current_supply: string;
 
             periodData: AssetTimePeriods<{
                 change: string;
