@@ -15,7 +15,7 @@ class TradeModel {
 
     async getTradeTokensData() {
 
-        
+
         const results: ICache["tradeStats"]["assets"] = [];
 
         const zanoDataDay = await fetchZanoMexcData("day");
@@ -28,26 +28,25 @@ class TradeModel {
 
 
         const totalCoins = await fetch('https://explorer.zano.org/api/get_total_coins').then(res => res.text());
-        
+
         if (!parseInt(totalCoins)) {
             throw new Error("Failed to fetch total coins from Zano explorer");
         }
 
-        // We need data in Zano (not USD) as frontend expects it for all other assets
         const Tvl = totalCoins;
-
         const MC = Tvl;
-        
+
 
         results.push({
             asset_id: "ZANO",
             tvl: Tvl.toString(),
-            price: zanoDataDay.price?.toString() || "0",
+            // Frontend expects all data in Zano (not USD) it for all other assets   
+            price: "1",
             name: "Zano",
             type: "Native coin",
             market_cap: MC.toString(),
             ticker: "ZANO",
-            current_supply: "0",
+            current_supply: totalCoins,
             periodData: {
                 day: {
                     change: zanoDataDay.changePercent?.toString() || "0",
