@@ -49,6 +49,7 @@ class AssetController {
                 price: tokenDataDay.current_price,
                 name: tokenDataDay.name,
                 market_cap: tokenDataDay.market_cap,
+                current_supply: tokenDataDay.current_supply,
                 ticker: tokenDataDay.ticker,
                 type: null,
                 periodData: {

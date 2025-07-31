@@ -6,6 +6,7 @@ export interface TradeAssetStats {
     change_24h_percent: string;
     volume_24h: string;
     market_cap: string;
+    current_supply: string;
     period_data: {
         price_change_percent: string;
         volume: string;
