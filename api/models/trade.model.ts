@@ -1,6 +1,8 @@
+import Decimal from "decimal.js";
 import { tokensWhitelist } from "../constants/config";
 import { ICache } from "../types/types";
 import { fetchTradeAssetData, fetchTradeGeneralData } from "../utils/methods";
+import { fetchCoinGeckoStats, fetchZanoMexcData } from "../utils/mexc";
 
 interface InputDataItem {
     start: number;
@@ -13,7 +15,53 @@ class TradeModel {
 
     async getTradeTokensData() {
 
+        
         const results: ICache["tradeStats"]["assets"] = [];
+
+        const zanoDataDay = await fetchZanoMexcData("day");
+        const zanoDataMonth = await fetchZanoMexcData("month");
+        const zanoDataYear = await fetchZanoMexcData("year");
+
+        if (!zanoDataDay || !zanoDataMonth || !zanoDataYear) {
+            throw new Error("Failed to fetch Zano data from MEXC");
+        }
+
+        const cgeckoData = await fetchCoinGeckoStats();
+
+        if (!cgeckoData) {
+            throw new Error("Failed to fetch CoinGecko data");
+        }
+
+        // We need data in Zano (not USD) as frontend expects it for all other assets
+        const Tvl = new Decimal(cgeckoData.mcap)
+            .div(cgeckoData.price)
+
+        const MC = Tvl;
+
+        results.push({
+            asset_id: "ZANO",
+            tvl: Tvl.toString(),
+            price: zanoDataDay.price?.toString() || "0",
+            name: "Zano",
+            type: "Native coin",
+            market_cap: MC.toString(),
+            ticker: "ZANO",
+            periodData: {
+                day: {
+                    change: zanoDataDay.changePercent?.toString() || "0",
+                    volume: zanoDataDay.volume?.toString() || "0"
+                },
+                month: {
+                    change: zanoDataMonth.changePercent?.toString() || "0",
+                    volume: zanoDataMonth.volume?.toString() || "0"
+                },
+                year: {
+                    change: zanoDataYear.changePercent?.toString() || "0",
+                    volume: zanoDataYear.volume?.toString() || "0"
+                }
+            }
+        });
+
 
         for (const targetToken of tokensWhitelist) {
             const tokenDataDay = await fetchTradeAssetData({
@@ -63,6 +111,8 @@ class TradeModel {
                 }
             });
         }
+
+        // fetching Zano data from MEXC as we don't have it in Trade API
 
         return results;
     }
