@@ -54,6 +54,7 @@ export interface ICache {
             largest_tvl: {
                 asset_id: string;
                 tvl: string;
+                ticker: string;
             }
             total_tvl: string;
 
