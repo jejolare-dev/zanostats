@@ -7,14 +7,14 @@ export const tokensWhitelist = [
         asset_id: "55a8e0a730b133fb83915ba0e4335a680ae9d07a99642b17774460560f3b003d",
         type: "Utility token",
     },
-    {
-        asset_id: "34b01e731c2215ae9d1244e3a2f7a4e09569cce4b4273ee18286db41f98873a2",
-        type: "Wrapped asset"
-    },
-    {
-        asset_id: "fc7edd432df16c1e1bf5b7233b5bdaa040c68715b4de24478c9b276082a642a0",
-        type: "Wrapped asset"
-    },
+    // {
+    //     asset_id: "34b01e731c2215ae9d1244e3a2f7a4e09569cce4b4273ee18286db41f98873a2",
+    //     type: "Wrapped asset"
+    // },
+    // {
+    //     asset_id: "fc7edd432df16c1e1bf5b7233b5bdaa040c68715b4de24478c9b276082a642a0",
+    //     type: "Wrapped asset"
+    // },
     {
         asset_id: "24819c4b65786c3ac424e05d9ef4ab212de6222cc73bc5c4b012df5a3107eea4",
         type: "Wrapped asset"
