@@ -38,7 +38,7 @@ class TradeModel {
 
 
         results.push({
-            asset_id: "ZANO",
+            asset_id: "d6329b5b1f7c0805b5c345f4957554002a2f557845f64d7645dae0e051a6498a",
             tvl: Tvl.toString(),
             // Frontend expects all data in Zano (not USD) it for all other assets   
             price: "1",
@@ -143,7 +143,7 @@ class TradeModel {
             largest_tvl: {
                 asset_id: generalDataWeek.largest_tvl.asset_id,
                 tvl: generalDataWeek.largest_tvl.tvl,
-                ticker: generalDataWeek.largest_tvl.ticker,
+                ticker:  generalDataWeek.largest_tvl.ticker,
             },
             total_tvl: generalDataWeek.total_tvl,
 

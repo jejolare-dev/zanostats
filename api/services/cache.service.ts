@@ -38,6 +38,7 @@ class CacheService {
                     largest_tvl: {
                         asset_id: "",
                         tvl: "0",
+                        ticker: ""
                     },
                     total_tvl: "0",
                     period_data: {
