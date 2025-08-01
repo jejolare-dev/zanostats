@@ -5,7 +5,7 @@ export const tokensWhitelist = [
     }, 
     {
         asset_id: "55a8e0a730b133fb83915ba0e4335a680ae9d07a99642b17774460560f3b003d",
-        type: "Gaming token",
+        type: "Utility token",
     },
     {
         asset_id: "34b01e731c2215ae9d1244e3a2f7a4e09569cce4b4273ee18286db41f98873a2",
