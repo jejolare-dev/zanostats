@@ -143,6 +143,7 @@ class TradeModel {
             largest_tvl: {
                 asset_id: generalDataWeek.largest_tvl.asset_id,
                 tvl: generalDataWeek.largest_tvl.tvl,
+                ticker: generalDataWeek.largest_tvl.ticker,
             },
             total_tvl: generalDataWeek.total_tvl,
 
