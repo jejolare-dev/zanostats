@@ -4,13 +4,6 @@ import { ICache } from "../types/types";
 import { fetchTradeAssetData, fetchTradeGeneralData } from "../utils/methods";
 import { fetchMexcData } from "../utils/mexc";
 
-interface InputDataItem {
-    start: number;
-    end: number;
-}
-
-type InputData = InputDataItem[];
-
 class TradeModel {
 
     async getTradeTokensData() {
@@ -27,7 +20,7 @@ class TradeModel {
                 const dataDay = await fetchMexcData("day", targetToken.mexc_pair);
                 const dataMonth = await fetchMexcData("month", targetToken.mexc_pair);
                 const dataYear = await fetchMexcData("year", targetToken.mexc_pair);
-                
+            
 
                 if (!dataDay || !dataMonth || !dataYear) {
                     throw new Error("Failed to fetch data from MEXC");
@@ -54,7 +47,10 @@ class TradeModel {
                     }
                 })() || "0";
 
-                const Tvl = totalCoins;
+                const Tvl = (new Decimal(dataDay.price)
+                    .mul(new Decimal(totalCoins)))
+                    .div(new Decimal(zanoData.price))
+                    .toString();
                 const MC = Tvl;
 
 
@@ -71,15 +67,15 @@ class TradeModel {
                     periodData: {
                         day: {
                             change: dataDay.changePercent?.toString() || "0",
-                            volume: dataDay.volume?.toString() || "0"
+                            volume: new Decimal(dataDay.volume).div(new Decimal(zanoData.price)).toString()
                         },
                         month: {
                             change: dataMonth.changePercent?.toString() || "0",
-                            volume: dataMonth.volume?.toString() || "0"
+                            volume: new Decimal(dataMonth.volume).div(new Decimal(zanoData.price)).toString()
                         },
                         year: {
                             change: dataYear.changePercent?.toString() || "0",
-                            volume: dataYear.volume?.toString() || "0"
+                            volume: new Decimal(dataYear.volume).div(new Decimal(zanoData.price)).toString()
                         }
                     }
                 });
@@ -121,22 +117,20 @@ class TradeModel {
                     periodData: {
                         day: {
                             change: tokenDataDay.period_data.price_change_percent,
-                            volume: tokenDataDay.period_data.volume
+                            volume: new Decimal(tokenDataDay.period_data.volume).div(new Decimal(zanoData.price)).toString()
                         },
                         month: {
                             change: tokenDataMonth.period_data.price_change_percent,
-                            volume: tokenDataMonth.period_data.volume
+                            volume: new Decimal(tokenDataMonth.period_data.volume).div(new Decimal(zanoData.price)).toString()
                         },
                         year: {
                             change: tokenDataYear.period_data.price_change_percent,
-                            volume: tokenDataYear.period_data.volume
+                            volume: new Decimal(tokenDataYear.period_data.volume).div(new Decimal(zanoData.price)).toString()
                         }
                     }
                 });
             }
         }
-
-        // fetching Zano data from MEXC as we don't have it in Trade API
 
         return results;
     }
