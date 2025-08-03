@@ -69,7 +69,7 @@ export async function fetchMexcData(term: 'day' | 'month' | 'year', symbol: stri
 
 
     const response = await fetch(
-        `https://api.mexc.com/api/v3/klines?symbol=${symbol}&interval=1d&startTime=${startTime}&endTime=${+new Date()}`
+        `https://api.mexc.com/api/v3/klines?symbol=${symbol}&interval=${interval}&startTime=${startTime}&endTime=${+new Date()}`
     );
 
     
