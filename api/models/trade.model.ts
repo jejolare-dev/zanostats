@@ -47,6 +47,8 @@ class TradeModel {
                         if (!parseInt(total)) {
                             throw new Error("Failed to fetch total coins from Zano explorer");
                         }
+
+                        return total;
                     } else {
                         return tokenDataFromTrade?.current_supply || "0";
                     }

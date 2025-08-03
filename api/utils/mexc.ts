@@ -65,12 +65,9 @@ export async function fetchMexcData(term: 'day' | 'month' | 'year', symbol: stri
         return {startTime, interval};
     })();
 
-    console.log(`https://api.mexc.com/api/v3/klines?symbol=${symbol}&interval=${interval}&startTime=${startTime}&endTime=${+new Date()}`);
+    const url = `https://api.mexc.com/api/v3/klines?symbol=${symbol}&interval=${interval}&startTime=${startTime}&endTime=${+new Date()}`
 
-
-    const response = await fetch(
-        `https://api.mexc.com/api/v3/klines?symbol=${symbol}&interval=${interval}&startTime=${startTime}&endTime=${+new Date()}`
-    );
+    const response = await fetch(url);
 
     
     if (!response.ok) {
