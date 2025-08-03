@@ -2,7 +2,7 @@ import Decimal from "decimal.js";
 import { tokensWhitelist } from "../constants/config";
 import { ICache } from "../types/types";
 import { fetchTradeAssetData, fetchTradeGeneralData } from "../utils/methods";
-import { fetchZanoMexcData } from "../utils/mexc";
+import { fetchMexcData } from "../utils/mexc";
 
 interface InputDataItem {
     start: number;
@@ -15,103 +15,123 @@ class TradeModel {
 
     async getTradeTokensData() {
 
+        const zanoData = await fetchMexcData("day", "ZANOUSDT");
 
         const results: ICache["tradeStats"]["assets"] = [];
 
-        const zanoDataDay = await fetchZanoMexcData("day");
-        const zanoDataMonth = await fetchZanoMexcData("month");
-        const zanoDataYear = await fetchZanoMexcData("year");
-
-        if (!zanoDataDay || !zanoDataMonth || !zanoDataYear) {
-            throw new Error("Failed to fetch Zano data from MEXC");
-        }
-
-
-        const totalCoins = await fetch('https://explorer.zano.org/api/get_total_coins').then(res => res.text());
-
-        if (!parseInt(totalCoins)) {
-            throw new Error("Failed to fetch total coins from Zano explorer");
-        }
-
-        const Tvl = totalCoins;
-        const MC = Tvl;
-
-
-        results.push({
-            asset_id: "d6329b5b1f7c0805b5c345f4957554002a2f557845f64d7645dae0e051a6498a",
-            tvl: Tvl.toString(),
-            // Frontend expects all data in Zano (not USD) it for all other assets   
-            price: "1",
-            name: "Zano",
-            type: "Native coin",
-            market_cap: MC.toString(),
-            ticker: "ZANO",
-            current_supply: totalCoins,
-            periodData: {
-                day: {
-                    change: zanoDataDay.changePercent?.toString() || "0",
-                    volume: zanoDataDay.volume?.toString() || "0"
-                },
-                month: {
-                    change: zanoDataMonth.changePercent?.toString() || "0",
-                    volume: zanoDataMonth.volume?.toString() || "0"
-                },
-                year: {
-                    change: zanoDataYear.changePercent?.toString() || "0",
-                    volume: zanoDataYear.volume?.toString() || "0"
-                }
-            }
-        });
-
-
         for (const targetToken of tokensWhitelist) {
-            const tokenDataDay = await fetchTradeAssetData({
-                asset_id: targetToken.asset_id,
-                from_timestamp: +new Date().getTime() - 24 * 60 * 60 * 1000,
-                to_timestamp: +new Date().getTime(),
-            });
 
-            const tokenDataMonth = await fetchTradeAssetData({
-                asset_id: targetToken.asset_id,
-                from_timestamp: +new Date().getTime() - 30 * 24 * 60 * 60 * 1000,
-                to_timestamp: +new Date().getTime(),
-            });
+            if (targetToken.mexc_pair) {
+                console.log(`Fetching MEXC data for token: ${targetToken.asset_id}`);
+                
+                const dataDay = await fetchMexcData("day", targetToken.mexc_pair);
+                const dataMonth = await fetchMexcData("month", targetToken.mexc_pair);
+                const dataYear = await fetchMexcData("year", targetToken.mexc_pair);
+                
 
-            const tokenDataYear = await fetchTradeAssetData({
-                asset_id: targetToken.asset_id,
-                from_timestamp: +new Date().getTime() - 365 * 24 * 60 * 60 * 1000,
-                to_timestamp: +new Date().getTime(),
-            });
-
-            if (!tokenDataDay || !tokenDataMonth || !tokenDataYear) {
-                console.error(`Failed to fetch data for token`);
-                continue;
-            }
-
-            results.push({
-                asset_id: targetToken.asset_id,
-                tvl: tokenDataDay.current_tvl,
-                price: tokenDataDay.current_price,
-                name: tokenDataDay.name,
-                type: targetToken.type,
-                market_cap: tokenDataDay.market_cap,
-                current_supply: tokenDataDay.current_supply,
-                ticker: tokenDataDay.ticker,
-                periodData: {
-                    day: {
-                        change: tokenDataDay.period_data.price_change_percent,
-                        volume: tokenDataDay.period_data.volume
-                    },
-                    month: {
-                        change: tokenDataMonth.period_data.price_change_percent,
-                        volume: tokenDataMonth.period_data.volume
-                    },
-                    year: {
-                        change: tokenDataYear.period_data.price_change_percent,
-                        volume: tokenDataYear.period_data.volume
-                    }
+                if (!dataDay || !dataMonth || !dataYear) {
+                    throw new Error("Failed to fetch data from MEXC");
                 }
-            });
+
+                const tokenDataFromTrade = await fetchTradeAssetData({
+                    asset_id: targetToken.asset_id,
+                    from_timestamp: +new Date().getTime(),
+                    to_timestamp: +new Date().getTime(),
+                }).catch(() => null);
+
+
+                const totalCoins = await (async () => {
+                    if (targetToken.asset_id === "d6329b5b1f7c0805b5c345f4957554002a2f557845f64d7645dae0e051a6498a") {
+                        const total = await fetch('https://explorer.zano.org/api/get_total_coins').then(res => res.text());
+
+                        if (!parseInt(total)) {
+                            throw new Error("Failed to fetch total coins from Zano explorer");
+                        }
+                    } else {
+                        return tokenDataFromTrade?.current_supply || "0";
+                    }
+                })() || "0";
+
+                const Tvl = totalCoins;
+                const MC = Tvl;
+
+
+                results.push({
+                    asset_id: targetToken.asset_id,
+                    tvl: Tvl.toString(),
+                    // Frontend expects all data in Zano (not USD) it for all other assets   
+                    price: new Decimal(dataDay.price).div(new Decimal(zanoData.price)).toString(),
+                    name: tokenDataFromTrade?.name || "Zano",
+                    type: targetToken.type,
+                    market_cap: MC.toString(),
+                    ticker: tokenDataFromTrade?.ticker || "ZANO",
+                    current_supply: totalCoins,
+                    periodData: {
+                        day: {
+                            change: dataDay.changePercent?.toString() || "0",
+                            volume: dataDay.volume?.toString() || "0"
+                        },
+                        month: {
+                            change: dataMonth.changePercent?.toString() || "0",
+                            volume: dataMonth.volume?.toString() || "0"
+                        },
+                        year: {
+                            change: dataYear.changePercent?.toString() || "0",
+                            volume: dataYear.volume?.toString() || "0"
+                        }
+                    }
+                });
+
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Throttle requests to avoid rate limiting
+            } else {
+                const tokenDataDay = await fetchTradeAssetData({
+                    asset_id: targetToken.asset_id,
+                    from_timestamp: +new Date().getTime() - 24 * 60 * 60 * 1000,
+                    to_timestamp: +new Date().getTime(),
+                });
+
+                const tokenDataMonth = await fetchTradeAssetData({
+                    asset_id: targetToken.asset_id,
+                    from_timestamp: +new Date().getTime() - 30 * 24 * 60 * 60 * 1000,
+                    to_timestamp: +new Date().getTime(),
+                });
+
+                const tokenDataYear = await fetchTradeAssetData({
+                    asset_id: targetToken.asset_id,
+                    from_timestamp: +new Date().getTime() - 365 * 24 * 60 * 60 * 1000,
+                    to_timestamp: +new Date().getTime(),
+                });
+
+                if (!tokenDataDay || !tokenDataMonth || !tokenDataYear) {
+                    console.error(`Failed to fetch data for token`);
+                    continue;
+                }
+
+                results.push({
+                    asset_id: targetToken.asset_id,
+                    tvl: tokenDataDay.current_tvl,
+                    price: tokenDataDay.current_price,
+                    name: tokenDataDay.name,
+                    type: targetToken.type,
+                    market_cap: tokenDataDay.market_cap,
+                    current_supply: tokenDataDay.current_supply,
+                    ticker: tokenDataDay.ticker,
+                    periodData: {
+                        day: {
+                            change: tokenDataDay.period_data.price_change_percent,
+                            volume: tokenDataDay.period_data.volume
+                        },
+                        month: {
+                            change: tokenDataMonth.period_data.price_change_percent,
+                            volume: tokenDataMonth.period_data.volume
+                        },
+                        year: {
+                            change: tokenDataYear.period_data.price_change_percent,
+                            volume: tokenDataYear.period_data.volume
+                        }
+                    }
+                });
+            }
         }
 
         // fetching Zano data from MEXC as we don't have it in Trade API
@@ -143,7 +163,7 @@ class TradeModel {
             largest_tvl: {
                 asset_id: generalDataWeek.largest_tvl.asset_id,
                 tvl: generalDataWeek.largest_tvl.tvl,
-                ticker:  generalDataWeek.largest_tvl.ticker,
+                ticker: generalDataWeek.largest_tvl.ticker,
             },
             total_tvl: generalDataWeek.total_tvl,
 

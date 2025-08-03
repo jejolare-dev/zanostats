@@ -88,7 +88,7 @@ export async function updateDbHeight(newHeight: number) {
     try {
         const stats = await Stats.findOne();
         logger.info(`Updating DB height to ${newHeight} with current height ${stats?.db_height}`);
-        
+
         await stats?.update({ db_height: newHeight });
         await stats?.save();
     } catch (e) {
@@ -119,7 +119,7 @@ export async function getStats() {
         const stats = await Stats.findOne();
 
         if (!stats) throw new Error("Error at get stats");
-        
+
         return stats;
     } catch (e) {
         console.error(e);
@@ -141,31 +141,27 @@ export async function getMatrixAdressesCount() {
 }
 
 export async function fetchTradeAssetData(queryParams: Record<string, any> = {}) {
-    try {
-        const tradeApiUrl = process.env.TRADE_API_URL;
-        
-        if (!tradeApiUrl) {
-            throw new Error("TRADE_API_URL is not defined in environment variables");
-        }
+    const tradeApiUrl = process.env.TRADE_API_URL;
 
-        const result = await axios.get(`${tradeApiUrl}/stats/asset`, {
-            params: queryParams,
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
-
-        return (result?.data as TradeAssetStatsResponse).data as TradeAssetStats;
-
-    } catch (e) {
-        console.error(e);
+    if (!tradeApiUrl) {
+        throw new Error("TRADE_API_URL is not defined in environment variables");
     }
+
+    const result = await axios.get(`${tradeApiUrl}/stats/asset`, {
+        params: queryParams,
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    return (result?.data as TradeAssetStatsResponse).data as TradeAssetStats;
+
 }
 
-export async function  fetchTradeGeneralData(queryParams: Record<string, any> = {}) {
+export async function fetchTradeGeneralData(queryParams: Record<string, any> = {}) {
     try {
         const tradeApiUrl = process.env.TRADE_API_URL;
-        
+
         if (!tradeApiUrl) {
             throw new Error("TRADE_API_URL is not defined in environment variables");
         }
@@ -182,7 +178,7 @@ export async function  fetchTradeGeneralData(queryParams: Record<string, any> = 
     } catch (e) {
         console.error(e);
     }
-    
+
 }
 
 export async function getPremiumAliasesCount() {
@@ -245,7 +241,7 @@ export async function getStakingInfo() {
             .dividedBy(new Decimal(result.staked_coins))
             .mul(100)
             .toNumber()
-        
+
     } catch (error) {
         console.error(error);
     }

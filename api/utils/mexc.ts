@@ -37,22 +37,7 @@ export function getStats(klines: Kline[]): SimpleStats {
     };
 }
 
-
-export async function fetchCoinGeckoStats() {
-    try {
-        const response = await fetch("https://api.coingecko.com/api/v3/coins/zano").then(res => res.json());
-
-
-        return {
-            mcap: response?.market_data?.market_cap.usd?.toString(),
-            price: response?.market_data?.current_price?.usd?.toString(),
-        }
-    } catch (error) {
-        console.error("Failed to fetch CoinGecko stats:", error);
-    }
-}
-
-export async function fetchZanoMexcData(term: 'day' | 'month' | 'year'): Promise<SimpleStats> {
+export async function fetchMexcData(term: 'day' | 'month' | 'year', symbol: string): Promise<SimpleStats> {
 
 
     const startTime = (() => {
@@ -77,10 +62,14 @@ export async function fetchZanoMexcData(term: 'day' | 'month' | 'year'): Promise
     })();
 
     const response = await fetch(
-        `https://api.mexc.com/api/v3/klines?symbol=ZANOUSDT&interval=1d&startTime=${startTime}&endTime=${+new Date()}`
+        `https://api.mexc.com/api/v3/klines?symbol=${symbol}&interval=1d&startTime=${startTime}&endTime=${+new Date()}`
     );
 
-    if (!response.ok) throw new Error("Failed to fetch data from MEXC");
+    
+    if (!response.ok) {
+        console.error(response);
+        throw new Error("Failed to fetch data from MEXC");
+    }
 
     const data = await response.json();
     const klines: Kline[] = data;

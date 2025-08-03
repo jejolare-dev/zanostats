@@ -1,5 +1,10 @@
 export const tokensWhitelist = [
     {
+        asset_id: "d6329b5b1f7c0805b5c345f4957554002a2f557845f64d7645dae0e051a6498a",
+        type: "Native coin",
+        mexc_pair: "ZANOUSDT",
+    },
+    {
         asset_id: "86143388bd056a8f0bab669f78f14873fac8e2dd8d57898cdb725a2d5e2e4f8f",
         type: "Private Stablecoin",
     }, 
@@ -17,18 +22,22 @@ export const tokensWhitelist = [
     // },
     {
         asset_id: "24819c4b65786c3ac424e05d9ef4ab212de6222cc73bc5c4b012df5a3107eea4",
-        type: "Wrapped asset"
+        type: "Wrapped asset",
+        mexc_pair: "DAIUSDT"
     },
     {
         asset_id: "040a180aca4194a158c17945dd115db42086f6f074c1f77838621a4927fffa91",
-        type: "Wrapped asset"
+        type: "Wrapped asset",
+        mexc_pair: "BTCUSDT"
     },
     {
         asset_id: "93da681503353509367e241cda3234299dedbbad9ec851de31e900490807bf0c",
-        type: "Wrapped asset"
+        type: "Wrapped asset",
+        mexc_pair: "ETHUSDT"
     },
     {
         asset_id: "6ca3fa07f1b6a75b6e195d2918c32228765968b54ea691c75958affa1c4073fb",
-        type: "Wrapped asset"
+        type: "Wrapped asset",
+        mexc_pair: "BNBUSDT"
     }
 ];
