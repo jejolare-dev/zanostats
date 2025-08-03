@@ -28,7 +28,7 @@ export function getStats(klines: Kline[]): SimpleStats {
 
     const changePercent = ((price - openPrice) / openPrice) * 100;
 
-    const volume = klines.reduce((sum, k) => sum + parseFloat(k[5]), 0);
+    const volume = klines.reduce((sum, k) => sum + parseFloat(k[7]), 0);
 
     return {
         price,
