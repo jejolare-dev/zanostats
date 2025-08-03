@@ -28,7 +28,7 @@ export function getStats(klines: Kline[]): SimpleStats {
 
     const changePercent = ((price - openPrice) / openPrice) * 100;
 
-    const volume = klines.reduce((sum, k) => sum + parseFloat(k[5]), 0);
+    const volume = klines.reduce((sum, k) => sum + parseFloat(k[7]), 0);
 
     return {
         price,
@@ -60,6 +60,9 @@ export async function fetchMexcData(term: 'day' | 'month' | 'year', symbol: stri
 
         return startTime;
     })();
+
+    console.log(`https://api.mexc.com/api/v3/klines?symbol=${symbol}&interval=1d&startTime=${startTime}&endTime=${+new Date()}`);
+    
 
     const response = await fetch(
         `https://api.mexc.com/api/v3/klines?symbol=${symbol}&interval=1d&startTime=${startTime}&endTime=${+new Date()}`
