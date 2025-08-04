@@ -67,5 +67,15 @@ export interface ICache {
                 }
             }>;
         }
-    }
+    },
+    totalHistoricalData: {
+        week: {
+            volume: number;
+            tvl: number;
+        }[];
+        month: {
+            volume: number;
+            tvl: number;
+        }[];
+    };
 }

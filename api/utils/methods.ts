@@ -2,7 +2,7 @@ import axios from "axios";
 import Stats from "../schemes/stats.model";
 import Decimal from "decimal.js";
 import logger from "../logger";
-import { TradeAssetStats, TradeAssetStatsResponse, TradeGeneralStats, TradeGeneralStatsResponse } from "../types/api";
+import { totalHistoricalStatsResponse, totalHistoricalStatsType, TradeAssetStats, TradeAssetStatsResponse, TradeGeneralStats, TradeGeneralStatsResponse } from "../types/api";
 
 const zanoURL = process.env.ZANOD_URL || "http://37.27.100.59:10500/json_rpc";
 
@@ -178,8 +178,25 @@ export async function fetchTradeGeneralData(queryParams: Record<string, any> = {
     } catch (e) {
         console.error(e);
     }
-
 }
+
+export async function fetchTradeStatsInPeriod(from: number, to: number) {
+    const tradeApiUrl = process.env.TRADE_API_URL;
+    const result = await axios.get(`${tradeApiUrl}/stats/total_stats_in_period`, {
+        params: {
+            from_timestamp: from,
+            to_timestamp: to,
+        }
+    });
+
+    const data = (result?.data as totalHistoricalStatsResponse)?.data as totalHistoricalStatsType;
+
+    return {
+        tvl: Number(data?.total_tvl ?? 0),
+        volume: Number(data?.volume ?? 0),
+    };
+}
+
 
 export async function getPremiumAliasesCount() {
     try {
