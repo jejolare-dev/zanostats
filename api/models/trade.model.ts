@@ -1,8 +1,9 @@
 import Decimal from "decimal.js";
 import { tokensWhitelist } from "../constants/config";
 import { ICache } from "../types/types";
-import { fetchTradeAssetData, fetchTradeGeneralData } from "../utils/methods";
+import { fetchTradeAssetData, fetchTradeGeneralData, fetchTradeStatsInPeriod } from "../utils/methods";
 import { fetchMexcData } from "../utils/mexc";
+import { generateMonthsTimestamps, generateWeekTimestamps } from "../utils/utils";
 
 class TradeModel {
 
@@ -16,11 +17,11 @@ class TradeModel {
 
             if (targetToken.mexc_pair) {
                 console.log(`Fetching MEXC data for token: ${targetToken.asset_id}`);
-                
+
                 const dataDay = await fetchMexcData("day", targetToken.mexc_pair);
                 const dataMonth = await fetchMexcData("month", targetToken.mexc_pair);
                 const dataYear = await fetchMexcData("year", targetToken.mexc_pair);
-            
+
 
                 if (!dataDay || !dataMonth || !dataYear) {
                     throw new Error("Failed to fetch data from MEXC");
@@ -172,6 +173,38 @@ class TradeModel {
 
     }
 
+
+    async cacheTotalHistoricalData() {
+        const dayTimestamps = generateWeekTimestamps();
+        const monthTimestamps = generateMonthsTimestamps();
+
+        const week = await Promise.all(
+            dayTimestamps.map(async ({ start, end }) => {
+                try {
+                    return await fetchTradeStatsInPeriod(start, end);
+                } catch (e) {
+                    console.error("Failed to fetch daily trade stats", e);
+                    return { volume: 0, tvl: 0 };
+                }
+            })
+        );
+
+        const month = await Promise.all(
+            monthTimestamps.map(async ({ start, end }) => {
+                try {
+                    return await fetchTradeStatsInPeriod(start, end);
+                } catch (e) {
+                    console.error("Failed to fetch monthly trade stats", e);
+                    return { volume: 0, tvl: 0 };
+                }
+            })
+        );
+
+        return {
+            week,
+            month,
+        };
+    }
 }
 const tradeModel = new TradeModel();
 

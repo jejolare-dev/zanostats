@@ -1,5 +1,5 @@
 import statsModel from "../models/stats.model";
-import { fetchTradeStatsInPeriod, getZanoPrice } from "../utils/methods";
+import { getZanoPrice } from "../utils/methods";
 import {
     generateMonthsTimestamps,
     generateWeekTimestamps,
@@ -67,12 +67,12 @@ class CacheService {
                             },
                         },
                     },
-                }
-            },
-            totalHistoricalData: {
-                week: [],
-                month: [],
-            },
+                },
+                totalHistoricalData: {
+                    week: [],
+                    month: [],
+                },
+            }
         };
     }
 
@@ -174,6 +174,17 @@ class CacheService {
         }
 
         this.cache.tradeStats.general = generalData;
+
+        const { week, month } = await tradeModel.cacheTotalHistoricalData();
+
+        if (!week || !month) {
+            throw new Error("Failed to fetch total historical trade data");
+        }
+
+        this.cache.tradeStats.totalHistoricalData = {
+            week,
+            month,
+        };
     }
 
     init() {
@@ -193,7 +204,6 @@ class CacheService {
                         this.cacheAliases(),
                         this.cacheAssets(),
                         this.cacheStakingData(),
-                        this.cacheTotalHistoricalData(),
                     ]);
                 } catch (error) {
                     console.error(error);
@@ -247,38 +257,6 @@ class CacheService {
                 current: yearCurrent,
                 offset: yearOffset,
             },
-        };
-    }
-
-    async cacheTotalHistoricalData() {
-        const dayTimestamps = generateWeekTimestamps();
-        const monthTimestamps = generateMonthsTimestamps();
-
-        const week = await Promise.all(
-            dayTimestamps.map(async ({ start, end }) => {
-                try {
-                    return await fetchTradeStatsInPeriod(start, end);
-                } catch (e) {
-                    console.error("Failed to fetch daily trade stats", e);
-                    return { volume: 0, tvl: 0 };
-                }
-            })
-        );
-
-        const month = await Promise.all(
-            monthTimestamps.map(async ({ start, end }) => {
-                try {
-                    return await fetchTradeStatsInPeriod(start, end);
-                } catch (e) {
-                    console.error("Failed to fetch monthly trade stats", e);
-                    return { volume: 0, tvl: 0 };
-                }
-            })
-        );
-
-        this.cache.totalHistoricalData = {
-            week,
-            month,
         };
     }
 
