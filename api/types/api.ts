@@ -39,3 +39,13 @@ export interface TradeGeneralStatsResponse {
     success: boolean;
     data: TradeGeneralStats;
 }
+
+export interface totalHistoricalStatsResponse {
+    success: boolean;
+    data: totalHistoricalStatsType;
+}
+
+export interface totalHistoricalStatsType {
+    volume: string;
+    total_tvl: string;
+};
