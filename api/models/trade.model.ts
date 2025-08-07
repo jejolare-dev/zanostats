@@ -155,15 +155,15 @@ class TradeModel {
                     periodData: {
                         day: {
                             change: tokenDataDay.period_data.price_change_percent,
-                            volume: new Decimal(tokenDataDay.period_data.volume).div(new Decimal(zanoData.price)).toString()
+                            volume: new Decimal(tokenDataDay.period_data.volume).toString()
                         },
                         month: {
                             change: tokenDataMonth.period_data.price_change_percent,
-                            volume: new Decimal(tokenDataMonth.period_data.volume).div(new Decimal(zanoData.price)).toString()
+                            volume: new Decimal(tokenDataMonth.period_data.volume).toString()
                         },
                         year: {
                             change: tokenDataYear.period_data.price_change_percent,
-                            volume: new Decimal(tokenDataYear.period_data.volume).div(new Decimal(zanoData.price)).toString()
+                            volume: new Decimal(tokenDataYear.period_data.volume).toString()
                         }
                     }
                 });
