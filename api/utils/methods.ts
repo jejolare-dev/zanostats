@@ -47,7 +47,7 @@ export async function getAssetsCount() {
             jsonrpc: "2.0",
             method: "get_assets_list",
             params: {
-                count: Number.MAX_SAFE_INTEGER,
+                count: 999999999,
                 offset: 0,
             },
         });
