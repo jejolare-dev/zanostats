@@ -47,7 +47,7 @@ export async function getAssetsCount() {
             jsonrpc: "2.0",
             method: "get_assets_list",
             params: {
-                count: 999999999,
+                count: 999999,
                 offset: 0,
             },
         });
@@ -55,8 +55,6 @@ export async function getAssetsCount() {
             throw "Fetch data error";
         }
 
-        console.log(result.data);
-        
 
         const count = result.data.result.assets.length;
 

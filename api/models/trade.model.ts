@@ -2,9 +2,11 @@ import Decimal from "decimal.js";
 import { tokensWhitelist } from "../constants/config";
 import { ICache } from "../types/types";
 import { fetchTradeAssetData, fetchTradeGeneralData, fetchTradeStatsInPeriod } from "../utils/methods";
-import { fetchMexcData } from "../utils/mexc";
+import { fetchMexcData, SimpleStats } from "../utils/mexc";
 import { generateMonthsTimestamps, generateWeekTimestamps } from "../utils/utils";
+import { TradeAssetStats } from "../types/api";
 
+const ZANO_ASSET_ID = "d6329b5b1f7c0805b5c345f4957554002a2f557845f64d7645dae0e051a6498a";
 class TradeModel {
 
     async getTradeTokensData() {
@@ -27,27 +29,41 @@ class TradeModel {
                     throw new Error("Failed to fetch data from MEXC");
                 }
 
-                const tokenDataDay = await fetchTradeAssetData({
-                    asset_id: targetToken.asset_id,
-                    from_timestamp: +new Date().getTime() - 24 * 60 * 60 * 1000,
-                    to_timestamp: +new Date().getTime(),
-                });
+                const tradeTokenData = await (async () => {
 
-                const tokenDataMonth = await fetchTradeAssetData({
-                    asset_id: targetToken.asset_id,
-                    from_timestamp: +new Date().getTime() - 30 * 24 * 60 * 60 * 1000,
-                    to_timestamp: +new Date().getTime(),
-                });
+                    if (targetToken.asset_id === ZANO_ASSET_ID) {
+                        return null;
+                    }
 
-                const tokenDataYear = await fetchTradeAssetData({
-                    asset_id: targetToken.asset_id,
-                    from_timestamp: +new Date().getTime() - 365 * 24 * 60 * 60 * 1000,
-                    to_timestamp: +new Date().getTime(),
-                });
+                    const tokenDataDay = await fetchTradeAssetData({
+                        asset_id: targetToken.asset_id,
+                        from_timestamp: +new Date().getTime() - 24 * 60 * 60 * 1000,
+                        to_timestamp: +new Date().getTime(),
+                    });
+
+                    const tokenDataMonth = await fetchTradeAssetData({
+                        asset_id: targetToken.asset_id,
+                        from_timestamp: +new Date().getTime() - 30 * 24 * 60 * 60 * 1000,
+                        to_timestamp: +new Date().getTime(),
+                    });
+
+                    const tokenDataYear = await fetchTradeAssetData({
+                        asset_id: targetToken.asset_id,
+                        from_timestamp: +new Date().getTime() - 365 * 24 * 60 * 60 * 1000,
+                        to_timestamp: +new Date().getTime(),
+                    });
+                    
+
+                    return {
+                        day: tokenDataDay,
+                        month: tokenDataMonth,
+                        year: tokenDataYear,
+                    }
+                })();
 
 
                 const totalCoins = await (async () => {
-                    if (targetToken.asset_id === "d6329b5b1f7c0805b5c345f4957554002a2f557845f64d7645dae0e051a6498a") {
+                    if (targetToken.asset_id === ZANO_ASSET_ID) {
                         const total = await fetch('https://explorer.zano.org/api/get_total_coins').then(res => res.text());
 
                         if (!parseInt(total)) {
@@ -56,7 +72,7 @@ class TradeModel {
 
                         return total;
                     } else {
-                        return tokenDataDay?.current_supply || "0";
+                        return tradeTokenData?.day?.current_supply || "0";
                     }
                 })() || "0";
 
@@ -66,30 +82,39 @@ class TradeModel {
                     .toString();
                 const MC = Tvl;
 
+                function getPeriodData(period: "day" | "month" | "year") {
+
+                    const mexcPeriodData = period === "day" ? dataDay : period === "month" ? dataMonth : dataYear;
+
+                    const tradePeriodData = tradeTokenData ? tradeTokenData[period] : null;
+
+                    return {
+                        change: ZANO_ASSET_ID === targetToken.asset_id ? 
+                            mexcPeriodData.changePercent.toString() :
+                            tradePeriodData?.period_data.price_change_percent?.toString() || "0",
+
+                        volume: ZANO_ASSET_ID === targetToken.asset_id ?
+                            new Decimal(mexcPeriodData.volume).div(new Decimal(zanoData.price)).toString() :
+                            new Decimal(tradePeriodData?.period_data.volume || "0").div(new Decimal(zanoData.price)).toString()
+                    };
+                }
+
+
 
                 results.push({
                     asset_id: targetToken.asset_id,
                     tvl: Tvl.toString(),
                     // Frontend expects all data in Zano (not USD) it for all other assets   
                     price: new Decimal(dataDay.price).div(new Decimal(zanoData.price)).toString(),
-                    name: tokenDataDay?.name || "Zano",
+                    name: tradeTokenData?.day?.name || "Zano",
                     type: targetToken.type,
                     market_cap: MC.toString(),
-                    ticker: tokenDataDay?.ticker || "ZANO",
+                    ticker: tradeTokenData?.day?.ticker || "ZANO",
                     current_supply: totalCoins,
                     periodData: {
-                        day: {
-                            change: tokenDataDay.period_data.price_change_percent?.toString() || "0",
-                            volume: new Decimal(tokenDataDay.period_data.volume).div(new Decimal(zanoData.price)).toString()
-                        },
-                        month: {
-                            change: tokenDataMonth.period_data.price_change_percent?.toString() || "0",
-                            volume: new Decimal(tokenDataMonth.period_data.volume).div(new Decimal(zanoData.price)).toString()
-                        },
-                        year: {
-                            change: tokenDataYear.period_data.price_change_percent?.toString() || "0",
-                            volume: new Decimal(tokenDataYear.period_data.volume).div(new Decimal(zanoData.price)).toString()
-                        }
+                        day: getPeriodData("day"),
+                        month: getPeriodData("month"),
+                        year: getPeriodData("year")
                     }
                 });
 

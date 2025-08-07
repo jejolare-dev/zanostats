@@ -9,7 +9,7 @@ type Kline = [
     string    // quote asset volume (USDT)
 ];
 
-interface SimpleStats {
+export interface SimpleStats {
     price: number;
     changePercent: number;
     volume: number;
