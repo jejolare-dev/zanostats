@@ -55,6 +55,9 @@ export async function getAssetsCount() {
             throw "Fetch data error";
         }
 
+        console.log(result.data);
+        
+
         const count = result.data.result.assets.length;
 
         return count;
