@@ -27,11 +27,23 @@ class TradeModel {
                     throw new Error("Failed to fetch data from MEXC");
                 }
 
-                const tokenDataFromTrade = await fetchTradeAssetData({
+                const tokenDataDay = await fetchTradeAssetData({
                     asset_id: targetToken.asset_id,
-                    from_timestamp: +new Date().getTime(),
+                    from_timestamp: +new Date().getTime() - 24 * 60 * 60 * 1000,
                     to_timestamp: +new Date().getTime(),
-                }).catch(() => null);
+                });
+
+                const tokenDataMonth = await fetchTradeAssetData({
+                    asset_id: targetToken.asset_id,
+                    from_timestamp: +new Date().getTime() - 30 * 24 * 60 * 60 * 1000,
+                    to_timestamp: +new Date().getTime(),
+                });
+
+                const tokenDataYear = await fetchTradeAssetData({
+                    asset_id: targetToken.asset_id,
+                    from_timestamp: +new Date().getTime() - 365 * 24 * 60 * 60 * 1000,
+                    to_timestamp: +new Date().getTime(),
+                });
 
 
                 const totalCoins = await (async () => {
@@ -44,7 +56,7 @@ class TradeModel {
 
                         return total;
                     } else {
-                        return tokenDataFromTrade?.current_supply || "0";
+                        return tokenDataDay?.current_supply || "0";
                     }
                 })() || "0";
 
@@ -60,23 +72,23 @@ class TradeModel {
                     tvl: Tvl.toString(),
                     // Frontend expects all data in Zano (not USD) it for all other assets   
                     price: new Decimal(dataDay.price).div(new Decimal(zanoData.price)).toString(),
-                    name: tokenDataFromTrade?.name || "Zano",
+                    name: tokenDataDay?.name || "Zano",
                     type: targetToken.type,
                     market_cap: MC.toString(),
-                    ticker: tokenDataFromTrade?.ticker || "ZANO",
+                    ticker: tokenDataDay?.ticker || "ZANO",
                     current_supply: totalCoins,
                     periodData: {
                         day: {
-                            change: dataDay.changePercent?.toString() || "0",
-                            volume: new Decimal(dataDay.volume).div(new Decimal(zanoData.price)).toString()
+                            change: tokenDataDay.period_data.price_change_percent?.toString() || "0",
+                            volume: new Decimal(tokenDataDay.period_data.volume).div(new Decimal(zanoData.price)).toString()
                         },
                         month: {
-                            change: dataMonth.changePercent?.toString() || "0",
-                            volume: new Decimal(dataMonth.volume).div(new Decimal(zanoData.price)).toString()
+                            change: tokenDataMonth.period_data.price_change_percent?.toString() || "0",
+                            volume: new Decimal(tokenDataMonth.period_data.volume).div(new Decimal(zanoData.price)).toString()
                         },
                         year: {
-                            change: dataYear.changePercent?.toString() || "0",
-                            volume: new Decimal(dataYear.volume).div(new Decimal(zanoData.price)).toString()
+                            change: tokenDataYear.period_data.price_change_percent?.toString() || "0",
+                            volume: new Decimal(tokenDataYear.period_data.volume).div(new Decimal(zanoData.price)).toString()
                         }
                     }
                 });
