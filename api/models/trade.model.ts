@@ -95,7 +95,7 @@ class TradeModel {
 
                         volume: ZANO_ASSET_ID === targetToken.asset_id ?
                             new Decimal(mexcPeriodData.volume).div(new Decimal(zanoData.price)).toString() :
-                            new Decimal(tradePeriodData?.period_data.volume || "0").div(new Decimal(zanoData.price)).toString()
+                            new Decimal(tradePeriodData?.period_data.volume || "0").toString()
                     };
                 }
 
